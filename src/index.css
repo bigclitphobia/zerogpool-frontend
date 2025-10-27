@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+/* Fancy scrollbar for leaderboard and other scrollable panes */
+/* Show scrollbar only when container actually scrolls */
+.lb-scroll { scrollbar-width: none; }
+.lb-scroll::-webkit-scrollbar { width: 0; height: 0; }
+
+.lb-scroll.has-scroll { scrollbar-width: thin; scrollbar-color: rgba(0,178,255,0.6) transparent; }
+.lb-scroll.has-scroll::-webkit-scrollbar { width: 10px; }
+.lb-scroll.has-scroll::-webkit-scrollbar-track { background: transparent; }
+.lb-scroll.has-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(0,178,255,0.9), rgba(17,0,253,0.9));
+  border-radius: 9999px;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.18);
+}
+.lb-scroll.has-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(0,178,255,1), rgba(17,0,253,1));
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.26);
+}
+
+*{
+    margin:0px;
+    padding:0px;
+}
