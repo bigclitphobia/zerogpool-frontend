@@ -1,5 +1,5 @@
 import React from 'react'
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useWallet } from './WalletContext'
 import bg1 from '../assets/bg1.png'
 import bg2 from '../assets/bg2.png'
@@ -7,7 +7,7 @@ import backImg from '../assets/back.png'
 import ogImg from '../assets/0G.png'
 
 const Layout: React.FC = () => {
-  const { isConnected, toggle } = useWallet()
+  const { isConnected } = useWallet()
   const location = useLocation()
   const navigate = useNavigate()
   const isHome = location.pathname === '/'

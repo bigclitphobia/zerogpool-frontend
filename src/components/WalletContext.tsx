@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { usePrivy } from '@privy-io/react-auth'
 
 type WalletContextType = {
   isConnected: boolean
@@ -11,6 +12,7 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined)
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState<boolean>(false)
+  const { ready, authenticated } = usePrivy()
 
   useEffect(() => {
     const saved = localStorage.getItem('wallet_connected')
@@ -20,6 +22,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     localStorage.setItem('wallet_connected', String(isConnected))
   }, [isConnected])
+
+  // Sync our simple connection flag with Privy status
+  useEffect(() => {
+    if (ready) setIsConnected(authenticated)
+  }, [ready, authenticated])
 
   const value = useMemo(
     () => ({
@@ -39,4 +46,3 @@ export function useWallet() {
   if (!ctx) throw new Error('useWallet must be used within WalletProvider')
   return ctx
 }
-

@@ -1,6 +1,6 @@
 import frameLg from '../assets/leaderboardFrame.png'
 import frameSm from '../assets/leaderboardFramesm.png'
-import React, { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 
 type Row = { rank: number; name: string; trophies: number }
 
