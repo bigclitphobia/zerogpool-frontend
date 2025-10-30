@@ -1,10 +1,11 @@
 import React from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useWallet } from './WalletContext'
-import bg1 from '../assets/bg1.png'
-import bg2 from '../assets/bg2.png'
+import bg from '../assets/bg.png'
+import bgBlur from '../assets/bgBlur.png'
 import backImg from '../assets/back.png'
-import ogImg from '../assets/0G.png'
+import ogImg from '../assets/OG.png'
+
 
 const Layout: React.FC = () => {
   const { isConnected } = useWallet()
@@ -12,7 +13,7 @@ const Layout: React.FC = () => {
   const navigate = useNavigate()
   const isHome = location.pathname === '/'
   // bg2 only on Home AND when wallet not connected; else bg1
-  const bgImage = isHome && !isConnected ? bg2 : bg1
+  const bgImage = isHome && !isConnected ? bg : bgBlur
 
   function handleBack() {
     const idx = (window.history.state && (window.history.state as any).idx) ?? 0
@@ -24,12 +25,8 @@ const Layout: React.FC = () => {
   }
 
   return (
-    <div className="relative min-h-screen text-neutral-100">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-20 bg-center bg-no-repeat bg-cover"
-        style={{ backgroundImage: `url(${bgImage})` }}
-      />
+    <div className="flex flex-col min-h-screen justify-between text-neutral-100">
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-20 bg-center bg-no-repeat bg-cover" style={{ backgroundImage: `url(${bgImage})` }} />
       {/* Color overlays above the background image using provided palette */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         {/* Vertical blue sweep (#1100FD -> #00B2FF) */}
@@ -41,31 +38,29 @@ const Layout: React.FC = () => {
         {/* Subtle cool vignette using neutral (#9B9B9B) tint */}
         <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_50%_100%,rgba(155,155,155,0.06),transparent_60%)]" />
       </div>
-      
-      {!isHome && (
-        <header className="relative z-10 mt-4 sm:mt-6">
-          {/* Reserve real header height so content flows below */}
-          <div className="relative mx-auto w-full px-4 sm:px-6 md:px-8 h-20 sm:h-24 md:h-28">
-            {/* Center OG image within reserved height */}
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <img
-                src={ogImg}
-                alt="OG"
-                className="h-10 sm:h-12 md:h-14 lg:h-16 object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]"
-              />
-            </div>
 
-            {/* Back button anchored to viewport-left with spacing */}
+      <header className="relative pt-4">
+        {/* Reserve real header height so content flows below */}
+        <div className="relative mx-auto w-full px-4 sm:px-6 md:px-8 h-20 sm:h-24 md:h-28">
+          {/* Center OG image within reserved height */}
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <img
+              src={ogImg}
+              alt="OG"
+              className="h-12 sm:h-16 md:h-18 lg:h-20 object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]"
+            />
+          </div>
+          {!isHome && (
             <div className="absolute inset-y-0 left-4 sm:left-6 md:left-8 lg:left-10 flex items-center z-20">
               <button onClick={handleBack} aria-label="Go back">
                 <img src={backImg} alt="Back" className="h-5 sm:h-6 md:h-7 lg:h-8 object-contain" />
               </button>
             </div>
-          </div>
-        </header>
-      )}
+          )}
+        </div>
+      </header>
 
-      <main className="mx-auto px-4 py-8 flex justify-center align-center" >
+      <main className="flex flex-col justify-end mx-auto px-4 py-8" >
         <Outlet />
       </main>
     </div>
