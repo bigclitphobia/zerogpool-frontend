@@ -1,4 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Mohave:wght@400;700&family=Roboto:wght@300&display=swap');
 @import "tailwindcss";
+
 
 /* Fancy scrollbar for leaderboard and other scrollable panes */
 /* Show scrollbar only when container actually scrolls */

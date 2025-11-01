@@ -27,17 +27,31 @@ const Layout: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen justify-between text-neutral-100">
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-20 bg-center bg-no-repeat bg-cover" style={{ backgroundImage: `url(${bgImage})` }} />
+
       {/* Color overlays above the background image using provided palette */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        {/* Vertical blue sweep (#1100FD -> #00B2FF) */}
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,0,253,0.20)_0%,rgba(0,178,255,0.18)_35%,transparent_70%)]" />
-        {/* Center glow in purple tones (#8C4E88) */}
-        <div className="absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_35%,rgba(140,78,136,0.28),transparent_72%)]" />
-        {/* Diagonal accent from top-left in deep plum (#50275E) */}
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(80,39,94,0.22)_0%,transparent_60%)]" />
-        {/* Subtle cool vignette using neutral (#9B9B9B) tint */}
-        <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_50%_100%,rgba(155,155,155,0.06),transparent_60%)]" />
-      </div>
+      {!isHome ? (
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-[#000000B2]">
+          {/* Vertical blue sweep (#1100FD -> #00B2FF) */}
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,0,253,0.20)_0%,rgba(0,178,255,0.18)_35%,transparent_70%)]" />
+          {/* Center glow in purple tones (#8C4E88) */}
+          <div className="absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_35%,rgba(140,78,136,0.28),transparent_72%)]" />
+          {/* Diagonal accent from top-left in deep plum (#50275E) */}
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(80,39,94,0.22)_0%,transparent_60%)]" />
+          {/* Subtle cool vignette using neutral (#9B9B9B) tint */}
+          <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_50%_100%,rgba(155,155,155,0.06),transparent_60%)]" />
+        </div>
+      ) : (
+            <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+              {/* Vertical blue sweep (#1100FD -> #00B2FF) */}
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,0,253,0.20)_0%,rgba(0,178,255,0.18)_35%,transparent_70%)]" />
+              {/* Center glow in purple tones (#8C4E88) */}
+              <div className="absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_35%,rgba(140,78,136,0.28),transparent_72%)]" />
+              {/* Diagonal accent from top-left in deep plum (#50275E) */}
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(80,39,94,0.22)_0%,transparent_60%)]" />
+              {/* Subtle cool vignette using neutral (#9B9B9B) tint */}
+              <div className="absolute inset-0 bg-[radial-gradient(120%_100%_at_50%_100%,rgba(155,155,155,0.06),transparent_60%)]" />
+            </div>
+          )}
 
       <header className="relative pt-4">
         {/* Reserve real header height so content flows below */}
