@@ -1,5 +1,10 @@
 import frameLg from '../assets/leaderboardFrame.png'
 import frameSm from '../assets/leaderboardFramesm.png'
+import ball1 from '../assets/balls/ball-1.png'
+import ball2 from '../assets/balls/ball-2.png'
+import ball3 from '../assets/balls/ball-3.png'
+import ball4 from '../assets/balls/ball-4.png'
+import ball5 from '../assets/balls/ball-5.png'
 import { useEffect, useRef } from 'react'
 
 // type Row = { rank: number; name: string; trophies: number }
@@ -125,7 +130,22 @@ import { useEffect, useRef } from 'react'
 // }
 
 const Table = () => {
+//   type BallScore = {
+//   "1": string;
+//   "2": string;
+//   "3": string;
+//   "4": string;
+//   "5": string;
+// };
   const topLeaders = [{ "rank": 1, "name": "Ankit", "trophies": 600 }, { "rank": 2, "name": "Bhavya", "trophies": 550 }, { "rank": 3, "name": "Chirag", "trophies": 490 }, { "rank": 4, "name": "Divya", "trophies": 420 }, { "rank": 5, "name": "Esha", "trophies": 380 }]
+  const ballScore = {"1": ball1, "2": ball2, "3": ball3, "4": ball4, "5": ball5};
+//   const ballScore: BallScore = { 
+//   "1": ball1, 
+//   "2": ball2, 
+//   "3": ball3, 
+//   "4": ball4, 
+//   "5": ball5 
+// };
   return (
     <div className="flex pb-4 px-10 h-full flex-col w-full justify-between">
       <div className="w-full flex items-center justify-between px-8 py-3 rounded-[16px] border-2 border-cyan-400 shadow-[0px_-1px_16.5px_-1px_#00E5FF]">
@@ -142,7 +162,7 @@ const Table = () => {
       {topLeaders.map((row) => (
         <div className="w-full flex items-center justify-between px-12 py-3 rounded-[20px] border-2 border-cyan-400 shadow-[0px_-1px_16.5px_-1px_#00E5FF]">
           <span className="text-4xl font-extrabold text-shadow-[0px_4.64px_3.94px_0px_#000000CC]" style={{ textShadow: '0px 4.64px 3.94px #000000CC' }}>
-            {row.rank}
+            <img src={ballScore[row.rank.toString()]} alt={`Rank ${row.rank}`} className="inline-block h-10 w-10 mr-2 align-middle" />
           </span>
           <span className="text-4xl font-extrabold drop-shadow-[0px_2px_4px_0px_#666180]">
             {row.name}
