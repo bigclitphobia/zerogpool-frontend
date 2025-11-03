@@ -1,14 +1,18 @@
 import React from 'react'
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { usePrivy } from '@privy-io/react-auth'
 import { useWallet } from './WalletContext'
 import bg from '../assets/bg.png'
 import bgBlur from '../assets/bgBlur.png'
 import backImg from '../assets/back.png'
 import ogImg from '../assets/OG.png'
+import connectWalletImg from '../assets/connectWallet.png'
+import gameMannual from '../assets/gameMannual.png'
 
 
 const Layout: React.FC = () => {
   const { isConnected } = useWallet()
+  const { authenticated, login } = usePrivy()
   const location = useLocation()
   const navigate = useNavigate()
   const isHome = location.pathname === '/'
@@ -25,7 +29,7 @@ const Layout: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen justify-between text-neutral-100">
+    <div className="relative flex flex-col min-h-dvh text-neutral-100">
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-20 bg-center bg-no-repeat bg-cover" style={{ backgroundImage: `url(${bgImage})` }} />
 
       {/* Color overlays above the background image using provided palette */}
@@ -74,9 +78,35 @@ const Layout: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex flex-col justify-end mx-auto px-4 py-8" >
+      <main className="flex-1 flex flex-col mx-auto px-4 py-8">
         <Outlet />
       </main>
+
+      {/* Desktop floating actions: bottom-right (hide on Home, Home has its own layout) */}
+      {!isHome && (
+        <div className="hidden md:flex fixed bottom-8 right-6 z-50 flex-col items-end gap-3">
+          {!authenticated && (
+            <button
+              onClick={() => login()}
+              aria-label="Connect Wallet"
+              className="group"
+            >
+              <img
+                src={connectWalletImg}
+                alt="Connect Wallet"
+                className="w-[280px] h-[64px] object-contain drop-shadow-[0_6px_18px_rgba(0,0,0,0.35)] transition-transform group-hover:scale-[1.02]"
+              />
+            </button>
+          )}
+          <Link to="/rules" aria-label="Game Manual" className="group">
+            <img
+              src={gameMannual}
+              alt="Game Manual"
+              className="w-[280px] h-[64px] object-contain drop-shadow-[0_6px_18px_rgba(0,0,0,0.35)] transition-transform group-hover:scale-[1.02]"
+            />
+        </Link>
+      </div>
+      )}
     </div>
   )
 }
