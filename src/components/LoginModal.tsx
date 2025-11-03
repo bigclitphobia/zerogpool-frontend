@@ -1,56 +1,112 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { useConnectWallet, useLoginWithEmail, useLoginWithOAuth, usePrivy, useWallets } from '@privy-io/react-auth'
+import {
+  useConnectWallet,
+  useLoginWithEmail,
+  useLoginWithOAuth,
+  usePrivy,
+} from '@privy-io/react-auth'
+import zeroGLogo from '../assets/OG.png'
+import kultGameLogo from '../assets/kultLogo.png'
+import MyLogo from '../assets/logo.png'
 
 type LoginModalProps = {
   open: boolean
   onClose: () => void
+  // Backward compat: if provided, used as center logo
   logoSrc?: string
-}
-
-const theme = {
-  surface: '#101018',
-  panel: '#141427',
-  text: '#e7e7ef',
-  subtext: '#a1a1b5',
-  primary: '#7C3AED',
-  primaryDark: '#6D28D9',
+  leftLogoSrc?: string
+  centerLogoSrc?: string
+  rightLogoSrc?: string
 }
 
 const WalletIcon = ({ size = 18 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M3.75 7.5h13.5a3 3 0 0 1 3 3v6.75a3 3 0 0 1-3 3H6.75a3 3 0 0 1-3-3V9.75a2.25 2.25 0 0 1 2.25-2.25Z" stroke="currentColor" strokeWidth="1.6"/>
-    <path d="M18.75 12.75h-2.25a1.5 1.5 0 1 0 0 3h2.25a.75.75 0 0 0 .75-.75v-1.5a.75.75 0 0 0-.75-.75Z" fill="currentColor"/>
-    <path d="M17.25 5.25H6a2.25 2.25 0 0 0-2.25 2.25v1.5" stroke="currentColor" strokeWidth="1.6"/>
+    <path
+      d="M3.75 7.5h13.5a3 3 0 0 1 3 3v6.75a3 3 0 0 1-3 3H6.75a3 3 0 0 1-3-3V9.75a2.25 2.25 0 0 1 2.25-2.25Z"
+      stroke="currentColor"
+      strokeWidth="1.6"
+    />
+    <path
+      d="M18.75 12.75h-2.25a1.5 1.5 0 1 0 0 3h2.25a.75.75 0 0 0 .75-.75v-1.5a.75.75 0 0 0-.75-.75Z"
+      fill="currentColor"
+    />
+    <path d="M17.25 5.25H6a2.25 2.25 0 0 0-2.25 2.25v1.5" stroke="currentColor" strokeWidth="1.6" />
   </svg>
 )
 
-export default function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
+const GoogleIcon = ({ size = 18 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path
+      fill="#4285F4"
+      d="M23.6 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5c-.3 1.6-1.3 3-2.7 3.9v3.2h4.4c2.6-2.3 4.1-5.6 4.1-9.2z"
+    />
+    <path
+      fill="#34A853"
+      d="M12 24c3.6 0 6.6-1.2 8.8-3.2l-4.4-3.2c-1.2.8-2.7 1.3-4.4 1.3-3.4 0-6.2-2.3-7.2-5.3H.2v3.3C2.3 21.3 6.8 24 12 24z"
+    />
+    <path fill="#FBBC05" d="M4.8 13.6c-.3-1-.3-2 0-3V7.3H.2C-1 9.6-1 12.4.2 14.7l4.6-1.1z" />
+    <path
+      fill="#EA4335"
+      d="M12 4.7c1.9 0 3.6.7 4.9 1.9l3.7-3.7C18.6 1 15.6 0 12 0 6.8 0 2.3 2.7.2 7.3l4.6 3.3C5.8 7.1 8.6 4.7 12 4.7z"
+    />
+  </svg>
+)
+
+export default function LoginModal({
+  open,
+  onClose,
+  logoSrc,
+  leftLogoSrc = kultGameLogo,
+  centerLogoSrc = MyLogo,
+  rightLogoSrc = zeroGLogo,
+}: LoginModalProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null)
-  const [view, setView] = useState<'menu' | 'email'>('menu')
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [emailStep, setEmailStep] = useState<'enter-email' | 'enter-code'>('enter-email')
   const [error, setError] = useState('')
 
-  const { connectWallet } = useConnectWallet({
-    onSuccess: () => onClose?.(),
-    onError: (err: any) => setError((err?.message ?? err?.code ?? String(err)) || 'Failed to connect wallet'),
-  })
+  // Ensure a canonical embedded wallet exists for the user
   const { connectOrCreateWallet } = usePrivy()
-  const { wallets } = useWallets()
+
+  const { connectWallet } = useConnectWallet({
+    onSuccess: async () => {
+      try {
+        await connectOrCreateWallet()
+      } catch (err) {
+        console.warn('connectOrCreateWallet (external) failed:', err)
+      }
+      onClose?.()
+    },
+    onError: (err: any) =>
+      setError((err?.message ?? err?.code ?? String(err)) || 'Failed to connect wallet'),
+  })
 
   const { initOAuth, loading: oauthLoading } = useLoginWithOAuth({
-    onComplete: () => onClose?.(),
+    onComplete: async () => {
+      try {
+        await connectOrCreateWallet()
+      } catch (err: any) {
+        console.warn('connectOrCreateWallet (oauth) failed:', err)
+      }
+      onClose?.()
+    },
     onError: (err: any) => setError((err?.message ?? err?.code ?? String(err)) || 'OAuth error'),
   })
 
   const { sendCode, loginWithCode, state: emailState } = useLoginWithEmail({
-    onComplete: () => onClose?.(),
+    onComplete: async () => {
+      try {
+        await connectOrCreateWallet()
+      } catch (err: any) {
+        console.warn('connectOrCreateWallet (email) failed:', err)
+      }
+      onClose?.()
+    },
     onError: (err: any) => setError((err?.message ?? err?.code ?? String(err)) || 'Email login error'),
   })
 
   useEffect(() => {
-    if (open) setView('menu')
     setError('')
     setEmail('')
     setCode('')
@@ -64,22 +120,38 @@ export default function LoginModal({ open, onClose, logoSrc }: LoginModalProps) 
     if (!open && dialogRef.current?.open) {
       dialogRef.current.close()
     }
-    let styleTag: HTMLStyleElement | undefined
-    if (typeof document !== 'undefined') {
-      styleTag = document.createElement('style')
-      styleTag.setAttribute('data-login-modal-backdrop', 'true')
-      styleTag.innerHTML = `dialog::backdrop{background:rgba(10,10,18,.6);backdrop-filter:saturate(1.2) blur(4px);}`
-      document.head.appendChild(styleTag)
-    }
     return () => {
-      if (styleTag && styleTag.parentNode) styleTag.parentNode.removeChild(styleTag)
+      try {
+        if (dialogRef.current?.open) dialogRef.current.close()
+      } catch {}
     }
   }, [open])
 
   const handleConnectWallet = () => {
-    try { if (dialogRef.current?.open) dialogRef.current.close() } catch {}
+    try {
+      if (dialogRef.current?.open) dialogRef.current.close()
+    } catch {}
     onClose?.()
-    setTimeout(() => { try { connectWallet() } catch {} }, 50)
+    setTimeout(() => {
+      try {
+        connectWallet({
+          walletList: [
+            'detected_ethereum_wallets',
+            'metamask',
+            'coinbase_wallet',
+            'rainbow',
+            'zerion',
+            'okx_wallet',
+            'wallet_connect',
+            'wallet_connect_qr',
+          ],
+          walletChainType: 'ethereum-only',
+        })
+      } catch (err: any) {
+        console.error('connectWallet error', err)
+        setError(err?.message || 'Failed to connect wallet')
+      }
+    }, 50)
   }
 
   const onEmailSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
@@ -98,99 +170,100 @@ export default function LoginModal({ open, onClose, logoSrc }: LoginModalProps) 
     setError('')
     try {
       await loginWithCode({ code })
+      // connectOrCreateWallet handled in the hook's onComplete
     } catch (err: any) {
       setError(err?.message || 'Invalid code')
     }
   }
 
   return (
-    <dialog ref={dialogRef} style={styles.dialog as React.CSSProperties} onCancel={onClose}>
-      <div style={styles.container as React.CSSProperties}>
-        <button onClick={onClose} aria-label="Close" style={styles.close as React.CSSProperties}>×</button>
+    <dialog
+      ref={dialogRef}
+      onCancel={onClose}
+      className="fixed inset-0 z-50 m-auto w-[92vw] max-w-[500px] max-h-[92dvh] overflow-visible rounded-2xl border border-white/10 bg-[rgba(10,16,34,0.70)] shadow-[0_30px_80px_rgba(0,0,0,0.55)] p-0"
+    >
+      {open && leftLogoSrc && (
+        <img
+          src={leftLogoSrc}
+          alt="Left logo"
+          className="fixed left-3 top-3 z-[60] w-30 m-3 rounded-md border border-[#222] object-contain pointer-events-none"
+        />
+      )}
+      {open && rightLogoSrc && (
+        <img
+          src={rightLogoSrc}
+          alt="Right logo"
+          className="fixed right-3 top-3 z-[60] w-24 m-3 rounded-md border border-[#222] object-contain pointer-events-none"
+        />
+      )}
+      <div className="relative p-6 pt-10 md:pt-10 text-[#EAF6FF] bg-gradient-to-b from-[rgba(10,16,34,0.75)] to-[rgba(8,16,34,0.45)]">
+        {(centerLogoSrc ?? logoSrc) && (
+          <img
+            src={centerLogoSrc ?? logoSrc!}
+            alt="Center logo"
+            className="absolute left-1/2 -top-8 md:-top-10 -translate-x-1/2 z-20 w-26 md:w-34 rounded-xl border border-[#222] object-contain"
+          />
+        )}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute right-3 top-2 text-2xl leading-none text-slate-300 hover:text-white bg-transparent p-0 appearance-none focus:outline-none focus:ring-0 active:outline-none select-none"
+        >
+          ×
+        </button>
 
-        <div style={styles.hero as React.CSSProperties}>
-          <div style={styles.heroGlow as React.CSSProperties} />
-          {logoSrc && <img src={logoSrc} alt="Logo" style={styles.logo as React.CSSProperties} />}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-cyan-400/10 to-transparent pt-8 pb-5 text-center mb-3">
+          <div className="pointer-events-none absolute -inset-20 bg-[radial-gradient(900px_220px_at_50%_-20%,rgba(34,193,241,0.25),transparent)]" />
+          <div className="relative z-10">
+            <h2 className="text-3xl md:text-4xl font-extrabold tracking-wider bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_2px_16px_rgba(0,160,255,0.35)]">
+              WELCOME
+            </h2>
+            <div className="mx-auto mt-2 h-1 w-24 rounded-full bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+          </div>
         </div>
 
-        {error && <div style={styles.error as React.CSSProperties}>{error}</div>}
-
-        {view === 'menu' && (
-          <div style={{ display: 'grid', gap: 12 }}>
-            <button style={styles.primary as React.CSSProperties} onClick={handleConnectWallet}>
-              <span style={styles.btnIcon as React.CSSProperties}><WalletIcon /></span>
-              <span>Connect Wallet</span>
-            </button>
-            <button
-              style={styles.primaryAlt as React.CSSProperties}
-              onClick={() => connectOrCreateWallet()}
-            >
-              <span>Connect or create embedded wallet</span>
-            </button>
-            <button
-              style={styles.primaryAlt as React.CSSProperties}
-              disabled={!wallets?.length}
-              onClick={() => wallets?.[0]?.loginOrLink?.()}
-            >
-              <span>Login with connected wallet</span>
-            </button>
-            <button style={styles.primaryAlt as React.CSSProperties} onClick={() => setView('email')}>
-              <span>Email OTP</span>
-            </button>
-
-            <div style={styles.divider as React.CSSProperties}><span></span></div>
-
-            <div style={styles.oauthRow as React.CSSProperties}>
-              <button
-                style={styles.oauth as React.CSSProperties}
-                disabled={oauthLoading}
-                onClick={() => initOAuth({ provider: 'google' })}
-                aria-label="Continue with Google"
-              >
-                <span>Google</span>
-              </button>
-              <button
-                style={styles.oauth as React.CSSProperties}
-                disabled={oauthLoading}
-                onClick={() => initOAuth({ provider: 'discord' })}
-                aria-label="Continue with Discord"
-              >
-                <span>Discord</span>
-              </button>
-            </div>
+        {error && (
+          <div className="my-2 rounded-lg bg-[#2a0e0e] px-3 py-2 text-sm text-[#ffd8d8]">
+            {error}
           </div>
         )}
 
-        {view === 'email' && (
+        <div className="grid gap-4">
           <form
-            style={styles.form as React.CSSProperties}
+            className="grid gap-3"
             onSubmit={emailStep === 'enter-email' ? onEmailSubmit : onCodeSubmit}
           >
             {emailStep === 'enter-email' ? (
               <>
-                <label style={styles.label as React.CSSProperties}>
-                  <span style={styles.labelText as React.CSSProperties}>Email address</span>
+                <label className="grid gap-2">
+                  <span className="text-sm text-white/70">Email address</span>
                   <input
                     type="email"
                     required
                     placeholder="you@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    style={styles.input as React.CSSProperties}
+                    className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-base text-white/95 placeholder-white/40 outline-none focus:ring-2 focus:ring-cyan-400/40 focus:border-white/30 transition"
                   />
-                  <small style={styles.hint as React.CSSProperties}>We’ll email you a 6‑digit code.</small>
                 </label>
-                <div style={styles.actionsRow as React.CSSProperties}>
-                  <button type="button" onClick={() => setView('menu')} style={styles.ghost as React.CSSProperties}>Back</button>
-                  <button type="submit" style={styles.primary as React.CSSProperties} disabled={emailState.status === 'sending-code' || emailState.status === 'submitting-code'}>
+                <div className="mt-1">
+                  <button
+                    type="submit"
+                    className="inline-flex w-full items-center justify-center rounded-2xl border border-fuchsia-400/50 bg-gradient-to-tr from-fuchsia-500 to-violet-500 px-5 py-3 font-bold text-white shadow-[0_10px_28px_rgba(217,70,239,0.35)] hover:shadow-[0_14px_34px_rgba(217,70,239,0.45)] active:scale-[.98] disabled:opacity-60"
+                    disabled={
+                      emailState.status === 'sending-code' ||
+                      emailState.status === 'submitting-code'
+                    }
+                  >
                     {emailState.status === 'sending-code' ? 'Sending…' : 'Send code'}
                   </button>
                 </div>
               </>
             ) : (
               <>
-                <label style={styles.label as React.CSSProperties}>
-                  <span style={styles.labelText as React.CSSProperties}>Enter 6‑digit code</span>
+                <label className="grid gap-2">
+                  <span className="text-sm text-[#9CB9D0]">Enter 6-digit code</span>
                   <input
                     type="text"
                     pattern="[0-9]{6}"
@@ -198,118 +271,67 @@ export default function LoginModal({ open, onClose, logoSrc }: LoginModalProps) 
                     placeholder="123456"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    style={styles.input as React.CSSProperties}
+                    className="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-base text-[#EAF6FF] outline-none focus:ring-2 focus:ring-cyan-400/50"
                   />
-                  <small style={styles.hint as React.CSSProperties}>Didn’t get it? Check spam or resend after a moment.</small>
+                  <small className="mt-1 text-xs text-[#9CB9D0]">
+                    Didn’t get it? Check spam or resend after a moment.
+                  </small>
                 </label>
-                <div style={styles.actionsRow as React.CSSProperties}>
-                  <button type="button" onClick={() => setEmailStep('enter-email')} style={styles.ghost as React.CSSProperties}>Edit email</button>
-                  <button type="submit" style={styles.primary as React.CSSProperties} disabled={emailState.status === 'submitting-code' || emailState.status === 'sending-code'}>
+                <div className="mt-1 flex justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError('')
+                      setEmailStep('enter-email')
+                    }}
+                    className="rounded-xl border border-transparent px-3 py-2.5 text-[#9CB9D0] hover:text-white"
+                  >
+                    Edit email
+                  </button>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center rounded-2xl border border-fuchsia-400/50 bg-gradient-to-tr from-fuchsia-500 to-violet-500 px-5 py-3 font-bold text-white shadow-[0_10px_28px_rgba(217,70,239,0.35)] hover:shadow-[0_14px_34px_rgba(217,70,239,0.45)] active:scale-[.98] disabled:opacity-60"
+                    disabled={
+                      emailState.status === 'submitting-code' ||
+                      emailState.status === 'sending-code'
+                    }
+                  >
                     {emailState.status === 'submitting-code' ? 'Verifying…' : 'Verify & continue'}
                   </button>
                 </div>
               </>
             )}
           </form>
-        )}
+
+          <div className="my-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-[#9CB9D0]">
+            <span className="h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+            <span className="text-xs">or</span>
+            <span className="h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+          </div>
+
+          <div className="grid gap-2">
+            <button
+              className="inline-flex w-full items-center justify-center rounded-2xl border border-emerald-400/50 bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-500 px-4 py-3 font-bold text-white shadow-[0_10px_28px_rgba(16,185,129,0.35)] hover:shadow-[0_14px_34px_rgba(16,185,129,0.45)] active:scale-[.98] transition"
+              onClick={handleConnectWallet}
+            >
+              <span className="mr-2 inline-flex items-center">
+                <WalletIcon />
+              </span>
+              <span>Connect Wallet</span>
+            </button>
+            <button
+              className="flex w-full items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-4 py-3 font-semibold text-white/95 hover:bg-white/10 disabled:opacity-50"
+              disabled={oauthLoading}
+              onClick={() => initOAuth({ provider: 'google' })}
+              aria-label="Continue with Google"
+            >
+              <GoogleIcon />
+              <span className="ml-2">Google</span>
+            </button>
+          </div>
+        </div>
       </div>
     </dialog>
   )
 }
 
-const styles = {
-  dialog: {
-    padding: 0,
-    border: 'none',
-    borderRadius: 16,
-    maxWidth: 460,
-    width: '92vw',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
-    overflow: 'hidden',
-  },
-  container: {
-    position: 'relative',
-    padding: 20,
-    background: theme.surface,
-    color: theme.text,
-    fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial',
-    fontSize: 15,
-    lineHeight: 1.45,
-  },
-  close: {
-    position: 'absolute' as const,
-    top: 10,
-    right: 12,
-    border: 'none',
-    background: 'transparent',
-    color: theme.subtext,
-    fontSize: 24,
-    lineHeight: '24px',
-    cursor: 'pointer',
-  },
-  hero: {
-    textAlign: 'center' as const,
-    padding: '26px 8px 18px',
-    background: `linear-gradient(180deg, ${theme.panel}, transparent)` ,
-    borderRadius: 12,
-    position: 'relative' as const,
-    overflow: 'hidden',
-  },
-  heroGlow: {
-    position: 'absolute' as const,
-    inset: -60,
-    background: `radial-gradient(800px 180px at 50% -20%, ${theme.primary}33, transparent)`,
-  },
-  logo: { width: 64, height: 64, objectFit: 'contain' as const, borderRadius: 12, border: '1px solid #222' },
-  btnIcon: { display: 'inline-flex', alignItems: 'center', marginRight: 8 },
-  primary: {
-    padding: '14px 16px',
-    borderRadius: 12,
-    border: `1px solid ${theme.primaryDark}`,
-    background: `linear-gradient(135deg, ${theme.primary}, ${theme.primaryDark})`,
-    color: '#fff',
-    cursor: 'pointer',
-    fontWeight: 700,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 8px 24px rgba(124,58,237,0.35)',
-    letterSpacing: 0.2,
-    transition: 'transform .08s ease, box-shadow .2s ease',
-  },
-  primaryAlt: {
-    padding: '14px 16px',
-    borderRadius: 12,
-    border: '1px solid #24243b',
-    background: '#18182e',
-    color: theme.text,
-    cursor: 'pointer',
-    fontWeight: 700,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    transition: 'transform .08s ease, box-shadow .2s ease',
-  },
-  divider: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, color: theme.subtext, margin: '8px 0' },
-  oauthRow: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 },
-  oauth: {
-    padding: '10px 12px',
-    borderRadius: 12,
-    border: '1px solid #24243b',
-    background: '#0f0f1a',
-    color: theme.text,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontWeight: 600,
-  },
-  form: { display: 'grid', gap: 12, marginTop: 10 },
-  label: { display: 'grid', gap: 8 },
-  labelText: { fontSize: 13, color: theme.subtext },
-  input: { padding: '12px 14px', borderRadius: 12, border: '1px solid #24243b', fontSize: 16, background: '#0f0f1a', color: theme.text, outline: `2px solid transparent`, boxShadow: 'inset 0 0 0 9999px rgba(255,255,255,0.01)' },
-  actionsRow: { display: 'flex', gap: 8, justifyContent: 'space-between', marginTop: 4 },
-  ghost: { padding: '10px 12px', borderRadius: 12, border: '1px solid transparent', background: 'transparent', color: theme.subtext, cursor: 'pointer' },
-  error: { background: '#2a0e0e', color: '#ffd8d8', padding: '8px 10px', borderRadius: 10, margin: '8px 0', fontSize: 13 },
-  hint: { marginTop: 6, color: theme.subtext, fontSize: 12 },
-}
