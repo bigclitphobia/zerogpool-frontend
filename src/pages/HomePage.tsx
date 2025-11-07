@@ -1,13 +1,29 @@
 // src/pages/ConnectPage.tsx
-import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import connectWalletImg from '../assets/connectWallet.png'
 import gameMannual from '../assets/gameMannual.png'
+import LoginModal from '../components/LoginModal'
+import { getPlayerData, getToken } from '../lib/api'
+// header assets are handled in Layout; not needed here
+import rulesIcon from '../assets/rulesIcon.png';
+import leaderboardBtnIcon from '../assets/leaderboard.png';
+import startSeesionBtnIcon from '../assets/startSession.png';
+import logoutImage from '../assets/LogoutIcon.png';
+import centerLogo from '../assets/logo.png';
+import trophyIcon from '../assets/trophy.png'
 
 export default function HomePage() {
-  const { authenticated, logout, user, login } = usePrivy()
+  const { authenticated, logout, user } = usePrivy()
   const { wallets } = useWallets()
+  const [showLogin, setShowLogin] = useState(false)
+  const [playerName, setPlayerName] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const connectedAddress =
+    (user as any)?.wallet?.address ||
+    (user as any)?.embeddedWallets?.[0]?.address ||
+    wallets.find((w) => !!w.address)?.address
 
   useEffect(() => {
     if (!authenticated || !user) return
@@ -17,56 +33,109 @@ export default function HomePage() {
     console.groupEnd()
   }, [authenticated, user, wallets])
 
-  return (
-    <div className="w-full flex justify-center px-4 pt-8">
-      <div className="max-w-xl w-full text-center">
-        {!authenticated ? (
-          <div className="flex flex-col items-center gap-3" />
-        ) : (
-          <>
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
-              <span className="text-white font-medium">You are connected</span>
-            </div>
-            <div className="flex justify-center gap-3">
-              <button
-                onClick={() => logout()}
-                className="rounded-xl bg-white/10 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/20"
-              >
-                Disconnect
-              </button>
-              <Link
-                to="/"
-                className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 px-5 py-2.5 text-sm font-semibold text-white shadow-lg"
-              >
-                Go Home
-              </Link>
-            </div>
-          </>
-        )}
-      </div>
+  // Fetch player name once we have JWT from backend login
+  useEffect(() => {
+    if (!authenticated) return
+    let active = true
+    let attempts = 0
+    const fetchName = () => {
+      if (!active) return
+      const token = getToken()
+      if (!token) {
+        if (attempts < 5) {
+          attempts += 1
+          setTimeout(fetchName, 400)
+        }
+        return
+      }
+      getPlayerData()
+        .then((data) => {
+          if (!active) return
+          const name = (data && (data as any).playerNames0) || null
+          setPlayerName(name)
+        })
+        .catch(() => {})
+    }
+    fetchName()
+    return () => { active = false }
+  }, [authenticated])
 
-      {/* Floating bottom-centered actions for Home (all breakpoints) */}
-      <div className="fixed inset-x-0 bottom-8 z-50 flex justify-center">
-        <div className="flex flex-col md:flex-row items-center gap-3">
-          {!authenticated && (
-            <button onClick={() => login()} aria-label="Connect Wallet" className="group">
-              <img
-                src={connectWalletImg}
-                alt="Connect Wallet"
-                className="w-[300px] h-[64px] sm:w-[340px] sm:h-[72px] md:w-[360px] md:h-[78px] object-contain drop-shadow-[0_6px_18px_rgba(0,0,0,0.35)] transition-transform group-hover:scale-[1.02]"
-              />
+  // When authenticated, show post-login UI
+
+  if (authenticated) {
+    return (
+      <div className="relative w-full h-full flex-1">
+        <div className="relative w-full h-full flex flex-col items-center">
+          
+          <div className="flex-1 w-full flex items-center justify-center py-8">
+            <img src={centerLogo} alt="Zero G Pool" className="max-h-[46vh] w-auto drop-shadow-[0_10px_30px_rgba(0,0,0,0.45)]" />
+          </div>
+
+          <div className="mt-6 flex flex-col md:flex-row items-center justify-center gap-4 sm:gap-5">
+            <button onClick={() => navigate('/nft1')} className="group active:scale-[0.99]">
+              <img src={startSeesionBtnIcon} alt="Start Session" className="h-18 sm:h-20 w-auto drop-shadow-[0_6px_18px_rgba(0,0,0,0.35)] group-hover:brightness-110 transition" />
             </button>
-          )}
-          <Link to="/rules" aria-label="Game Manual" className="group">
-            <img
-              src={gameMannual}
-              alt="Game Manual"
-              className="w-[300px] h-[64px] sm:w-[340px] sm:h-[72px] md:w-[360px] md:h-[78px] object-contain drop-shadow-[0_6px_18px_rgba(0,0,0,0.35)] transition-transform group-hover:scale-[1.02]"
-            />
+            <Link to="/leaderboard" className="group active:scale-[0.99]">
+              <img src={leaderboardBtnIcon} alt="Leaderboard" className="h-18 sm:h-20 w-auto drop-shadow-[0_6px_18px_rgba(0,0,0,0.35)] group-hover:brightness-110 transition" />
+            </Link>
+          </div>
+
+        </div>
+        <div style={{background:'green'}}>
+          <div className="absolute left-[12px] bottom-[12px] flex items-center gap-3">
+            <button
+              onClick={() => logout()}
+              title="Logout"
+              className="flex items-center gap-2 rounded-2xl ring-1 ring-cyan-300/60 px-4 py-2 bg-black/30 text-cyan-100 hover:bg-black/40 text-sm font-semibold tracking-wide active:scale-95"
+            >
+              <img src={logoutImage} alt="Logout" className="h-4 w-4" />
+              LOGOUT
+            </button>
+          </div>
+
+          <Link to="/rules" className="absolute right-[232px] bottom-[12px] rounded-2xl ring-1 ring-white/30 bg-black/30 px-4 py-2 hover:bg-black/40 text-white/95 text-sm font-semibold tracking-wide flex items-center gap-2">
+            <img src={rulesIcon} alt="Rules" className="h-4 w-4" />
+            RULES
+          </Link>
+          <Link to="/nft1" className="absolute right-[122px] bottom-[12px] rounded-2xl ring-1 ring-white/30 bg-black/30 px-4 py-2 hover:bg-black/40 text-white/95 text-sm font-semibold tracking-wide flex items-center gap-2">
+            <img src={rulesIcon} alt="Rules" className="h-4 w-4" />
+            NFT1
+          </Link>
+          <Link to="/nft2" className="absolute right-[12px] bottom-[12px] rounded-2xl ring-1 ring-white/30 bg-black/30 px-4 py-2 hover:bg-black/40 text-white/95 text-sm font-semibold tracking-wide flex items-center gap-2">
+            <img src={rulesIcon} alt="Rules" className="h-4 w-4" />
+            NFT2
           </Link>
         </div>
       </div>
+    )
+  }
+
+  // Before login UI: show center logo and CTAs
+  return (
+    <div className="relative w-full h-full flex flex-col items-center">
+      <div className="flex-1 w-full flex items-center justify-center py-8">
+        <img src={centerLogo} alt="Zero G Pool" className="max-h-[46vh] w-auto drop-shadow-[0_10px_30px_rgba(0,0,0,0.45)]" />
+      </div>
+
+      {/* Connect + Game Manual below the logo (same size as main CTAs) */}
+      <div className="mt-6 flex flex-col md:flex-row items-center justify-center gap-4 sm:gap-8">
+        <button onClick={() => setShowLogin(true)} aria-label="Connect Wallet" className="group">
+          <img
+            src={connectWalletImg}
+            alt="Connect Wallet"
+            className="h-20 w-auto drop-shadow-[0_6px_18px_rgba(0,0,0,0.35)] group-hover:brightness-110 transition"
+          />
+        </button>
+        <Link to="/rules" aria-label="Game Manual" className="group">
+          <img
+            src={gameMannual}
+            alt="Game Manual"
+            className="h-20 w-auto drop-shadow-[0_6px_18px_rgba(0,0,0,0.35)] group-hover:brightness-110 transition"
+          />
+        </Link>
+      </div>
+
+      <LoginModal open={showLogin} onClose={() => setShowLogin(false)} />
     </div>
   )
 }
