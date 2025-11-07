@@ -1,69 +1,48 @@
-import React from 'react'
-
 export default function RulesPage() {
   return (
-    <div className="w-full flex justify-center px-4 pt-4 sm:pt-6">
-      <div className="w-full max-w-2xl md:max-w-3xl space-y-4 sm:space-y-6">
-        <header className="text-center select-none">
+    <div className="w-full flex justify-center px-4 pt-2 sm:pt-4">
+      <div className="w-full max-w-5xl">
+        {/* Title */}
+        <div className="text-center select-none mb-3 sm:mb-4">
           <h1
-            className="text-2xl sm:text-3xl md:text-4xl font-extrabold uppercase tracking-[0.12em] text-cyan-200"
-            style={{ textShadow: '0 1px 10px rgba(0, 200, 255, 0.28)' }}
+            className="pl-5 text-center sm:text-3xl md:text-8xl font-extrabold uppercase text-white z-10 tracking-[0.2em]"
+            style={{ textShadow: '0 0 36px rgba(255,255,255,0.9), 0 0 18px rgba(255,255,255,0.7), 0 2px 10px rgba(255,255,255,0.6)' }}
           >
-            8‑Ball Pool Rules
+            RULES
           </h1>
-        </header>
+          <div className="mx-auto mt-2 h-1.5 w-48 md:w-64 rounded-full bg-white/80 blur-[2px]" />
+        </div>
 
-        {/* Objective */}
-        <section className="relative overflow-hidden rounded-2xl">
-          <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-[radial-gradient(80%_40%_at_50%_0%,rgba(34,193,241,0.12),transparent_70%)]" />
-          <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 sm:p-5 shadow-[0_10px_28px_rgba(0,0,0,0.3)]">
-            <h2 className="text-lg sm:text-xl font-bold text-white/95 mb-2">Objective</h2>
-            <p className="text-sm sm:text-[15px] leading-relaxed text-[#EAF6FF]">
-              Pocket all of your group of balls
-              <span className="mx-1 inline-flex items-center rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-xs font-semibold tracking-wide text-cyan-200">
-                solids 1–7
-              </span>
-              or
-              <span className="mx-1 inline-flex items-center rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-xs font-semibold tracking-wide text-fuchsia-200">
-                stripes 9–15
-              </span>
-              and then legally pocket the
-              <span className="ml-1 inline-flex items-center rounded-full border border-white/15 bg-white/10 px-2 py-0.5 text-xs font-semibold tracking-wide text-amber-200">
-                8‑ball
-              </span>
-              to win.
-            </p>
-          </div>
-        </section>
+        {/* Glowing card */}
+        <div className="relative mx-auto w-full max-w-3xl">
+          {/* Outer glow border */}
+          <div className="rounded-[24px] p-[2px] bg-gradient-to-b from-[#008CFF]/80 via-[#008CFF]/30 to-transparent shadow-[0_0_40px_rgba(0,140,255,0.45)]">
+            <div className="rounded-[22px] bg-[#08002D]/80 backdrop-blur-md border border-white/10 p-5 sm:p-7 md:p-8">
+              {/* Objective */}
+              <div>
+                <h2 className="text-[#008CFF] font-extrabold text-xl sm:text-2xl mb-2">Objective:</h2>
+                <p className="text-[#EAF6FF] text-base sm:text-lg leading-relaxed">
+                  Pocket all of your group of balls (either solids [1–7] or stripes [9–15]) and then legally
+                  pocket the 8‑ball to win.
+                </p>
+              </div>
 
-        {/* Game Setup */}
-        <section className="relative">
-          <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 sm:p-5 shadow-[0_10px_28px_rgba(0,0,0,0.3)]">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-lg sm:text-xl font-bold text-white/95">Game Setup</h2>
-              <span className="text-[11px] sm:text-xs text-white/60">Quick start checklist</span>
+              {/* Divider */}
+              <div className="my-5 h-[2px] bg-[#008CFF]/60" />
+
+              {/* Game setup */}
+              <div>
+                <h3 className="text-[#008CFF] font-extrabold text-xl sm:text-2xl mb-3">Game Setup</h3>
+                <ul className="space-y-2 sm:space-y-2.5 text-[#EAF6FF] text-base sm:text-lg">
+                  <li>- Balls are racked in a triangle with the 8‑ball in the center.</li>
+                  <li className="underline underline-offset-4 decoration-[#008CFF]/80">- The first ball (apex) sits on the foot spot.</li>
+                  <li>- One solid and one stripe go in the bottom corners.</li>
+                  <li>- Players decide who breaks (coin toss or lag shot).</li>
+                </ul>
+              </div>
             </div>
-
-            <ol className="space-y-2.5 sm:space-y-3">
-              {[ 
-                'Balls are racked in a triangle with the 8‑ball in the center.',
-                'The first ball (apex) sits on the foot spot.',
-                'One solid and one stripe go in the bottom corners.',
-                'Players decide who breaks (coin toss or lag shot).',
-              ].map((text, i) => (
-                <li key={i} className="group flex items-start gap-3 sm:gap-3.5">
-                  <span className="mt-0.5 inline-flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 text-white text-xs sm:text-sm font-extrabold shadow-[0_3px_10px_rgba(56,189,248,0.28)]">
-                    {i + 1}
-                  </span>
-                  <div className="flex-1 rounded-xl border border-white/10 bg-black/20 px-3 sm:px-3.5 py-2 sm:py-2.5 text-sm sm:text-[15px] text-[#EAF6FF] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                    {text}
-                  </div>
-                </li>
-              ))}
-            </ol>
-
           </div>
-        </section>
+        </div>
       </div>
     </div>
   )

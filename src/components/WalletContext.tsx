@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
+import { loginWithWallet, setToken } from '../lib/api'
 
 type WalletContextType = {
   isConnected: boolean
@@ -30,7 +31,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (ready) setIsConnected(authenticated)
   }, [ready, authenticated])
 
-  // On login, call backend with wallet address
+  // On login, call backend with wallet address and store JWT
   useEffect(() => {
     if (!ready || !authenticated) return
     const address = user?.wallet?.address || wallets.find((w) => !!w.address)?.address
@@ -38,18 +39,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (backendLoginSent.current === address) return
     backendLoginSent.current = address
 
-    try {
-      fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress: address }),
-      }).catch((err) => {
-        // Network errors are non-fatal to the app; log for debugging
-        console.warn('Backend login call failed:', err)
-      })
-    } catch (err) {
-      console.warn('Backend login call error:', err)
-    }
+    loginWithWallet(address).catch((err) => {
+      // Network errors are non-fatal to the app; log for debugging
+      console.warn('Backend login call failed:', err)
+      // ensure no stale token on failure
+      setToken(null)
+    })
   }, [ready, authenticated, user, wallets])
 
   const value = useMemo(
