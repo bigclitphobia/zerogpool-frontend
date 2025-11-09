@@ -3,6 +3,7 @@ import {
   useConnectWallet,
   useLoginWithEmail,
   useLoginWithOAuth,
+  useLogin,
   usePrivy,
   useCreateWallet,
 } from '@privy-io/react-auth'
@@ -412,6 +413,9 @@ export default function LoginModal({
     onError: (err: any) => setError((err?.message ?? err?.code ?? String(err)) || 'Email login error'),
   })
 
+  // Privy modal login (use for wallet auth so `authenticated` becomes true)
+  const { login } = useLogin()
+
   // Create embedded wallet with our own UI (no Privy modal UI)
   const handleCreateEmbeddedWallet = async () => {
     setError('')
@@ -592,12 +596,14 @@ export default function LoginModal({
 
                     <DividerOr />
 
-                    {/* CONNECT WALLET toggles the wallet list panel */}
+                    {/* CONNECT WALLET triggers Privy wallet login to create an authenticated session */}
                     <button
                       className="w-full inline-flex items-center justify-center rounded-2xl border border-emerald-400/50 bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-500 px-4 py-3 text-lg font-bold text-white shadow-[0_10px_28px_rgba(16,185,129,0.35)] hover:shadow-[0_14px_34px_rgba(16,185,129,0.45)] active:scale-[.99] transition disabled:opacity-60"
                       onClick={() => {
                         if (emailStep === 'enter-code') return
-                        setWalletMode(true)
+                        try { if (dialogRef.current?.open) dialogRef.current.close() } catch {}
+                        // Open Privy login modal with only wallet method, so SIWE completes and `authenticated` flips true
+                        login({ loginMethods: ['wallet'] })
                       }}
                       disabled={emailStep === 'enter-code'}
                     >
