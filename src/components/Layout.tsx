@@ -26,6 +26,7 @@ const Layout: React.FC = () => {
     (user as any)?.wallet?.address ||
     (user as any)?.embeddedWallets?.[0]?.address ||
     wallets.find((w) => !!(w as any).address)?.address
+  const needsWallet = !!(authenticated && !connectedAddress)
   const shortAddress = useMemo(() => {
     const a = connectedAddress || ''
     return a ? `${a.slice(0, 6)}…${a.slice(-4)}` : ''
@@ -118,7 +119,7 @@ const Layout: React.FC = () => {
         <Outlet />
       </main>
 
-      <LoginModal open={showLogin} onClose={() => setShowLogin(false)} />
+      <LoginModal open={showLogin || needsWallet} onClose={() => setShowLogin(false)} />
     </div>
   )
 }
