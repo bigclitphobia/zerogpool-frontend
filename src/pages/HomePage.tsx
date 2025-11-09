@@ -13,7 +13,6 @@ import leaderboardBtnIcon from '../assets/leaderboard.png';
 import startSeesionBtnIcon from '../assets/startSession.png';
 import logoutImage from '../assets/LogoutIcon.png';
 import centerLogo from '../assets/logo.png';
-import trophyIcon from '../assets/trophy.png'
 
 export default function HomePage() {
   const { authenticated, logout, user } = usePrivy()
@@ -62,6 +61,7 @@ export default function HomePage() {
     return () => { active = false }
   }, [authenticated])
 
+  console.log("connected Address is ",connectedAddress," player Name is ",playerName)
   // When authenticated, show post-login UI
 
   if (authenticated) {

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import poolTableNFT from '../assets/tableNFT.png'
 import btnFrame from '../assets/btnFrame.png'
-import ButtonFrame from '../assets/btnFrame.png';
+// import ButtonFrame from '../assets/btnFrame.png';
 
 
 type Category = 'color' | 'pattern' | 'diamonds' | 'name' | 'avatar' | 'cues'

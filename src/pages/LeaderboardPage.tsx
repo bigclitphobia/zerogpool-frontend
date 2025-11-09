@@ -1,11 +1,11 @@
 import frameLg from '../assets/leaderboardFrame.png'
-import frameSm from '../assets/leaderboardFramesm.png'
+// import frameSm from '../assets/leaderboardFramesm.png'
 import ball1 from '../assets/balls/ball-1.png'
 import ball2 from '../assets/balls/ball-2.png'
 import ball3 from '../assets/balls/ball-3.png'
 import ball4 from '../assets/balls/ball-4.png'
 import ball5 from '../assets/balls/ball-5.png'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getLeaderboard, type LeaderboardRow } from '../lib/api'
 
 const Table = () => {
