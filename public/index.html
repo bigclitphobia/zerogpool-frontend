@@ -47,7 +47,7 @@
         align-items: center;
         justify-content: center;
         opacity: 0;
-        transition: opacity 1s ease;
+        transition: opacity 1.5s ease;
       }
 
       #unity-container.loaded {
@@ -74,7 +74,7 @@
         justify-content: center;
         z-index: 1000;
         background: linear-gradient(135deg, #0a0e27 0%, #1a0b2e 50%, #16003b 100%);
-        transition: opacity 0.8s ease, visibility 0.8s ease;
+        transition: opacity 1s ease-out, visibility 1s ease-out;
       }
 
       #custom-loader.hidden {
@@ -190,27 +190,27 @@
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
       }
 
-      .orbit-ball:nth-child(1) {
+      .orbit-ball:nth-child(3) {
         background: radial-gradient(circle at 35% 35%, #ffeb3b, #ff9800);
         animation: orbit 4s linear infinite;
       }
 
-      .orbit-ball:nth-child(2) {
+      .orbit-ball:nth-child(4) {
         background: radial-gradient(circle at 35% 35%, #f44336, #c62828);
         animation: orbit 4s linear infinite 0.5s;
       }
 
-      .orbit-ball:nth-child(3) {
+      .orbit-ball:nth-child(5) {
         background: radial-gradient(circle at 35% 35%, #2196f3, #1565c0);
         animation: orbit 4s linear infinite 1s;
       }
 
-      .orbit-ball:nth-child(4) {
+      .orbit-ball:nth-child(6) {
         background: radial-gradient(circle at 35% 35%, #4caf50, #2e7d32);
         animation: orbit 4s linear infinite 1.5s;
       }
 
-      .orbit-ball:nth-child(5) {
+      .orbit-ball:nth-child(7) {
         background: radial-gradient(circle at 35% 35%, #9c27b0, #6a1b9a);
         animation: orbit 4s linear infinite 2s;
       }
@@ -351,12 +351,7 @@
         text-align: center;
         max-width: 500px;
         line-height: 1.6;
-        animation: tipFade 8s ease-in-out infinite;
-      }
-
-      @keyframes tipFade {
-        0%, 100% { opacity: 0.5; }
-        50% { opacity: 1; }
+        transition: opacity 0.3s ease;
       }
 
       /* Particle effects */
@@ -504,7 +499,7 @@
       let tipIndex = 0;
       const tipElement = document.getElementById('loading-tip');
       
-      setInterval(() => {
+      const tipInterval = setInterval(() => {
         tipIndex = (tipIndex + 1) % tips.length;
         tipElement.style.opacity = '0';
         setTimeout(() => {
@@ -531,7 +526,7 @@
       }
       
       createParticles();
-      setInterval(createParticles, 10000);
+      const particleInterval = setInterval(createParticles, 10000);
 
       // Service Worker
       window.addEventListener("load", function () {
@@ -597,40 +592,90 @@
         if (progressFill) progressFill.style.width = percentage + '%';
         if (progressText) progressText.textContent = percentage + '%';
         if (cueStick) cueStick.style.width = (percentage * 4) + 'px';
+        
+        console.log('🎮 Loading progress:', percentage + '%');
+      }
+
+      // Hide loader function with proper cleanup
+      function hideLoader() {
+        console.log('🎱 Hiding custom loader...');
+        
+        const loader = document.getElementById('custom-loader');
+        const container = document.getElementById('unity-container');
+        
+        if (!loader || !container) {
+          console.error('❌ Loader or container element not found!');
+          return;
+        }
+        
+        // Stop all intervals
+        clearInterval(tipInterval);
+        clearInterval(particleInterval);
+        
+        console.log('✅ Fading out loader, fading in Unity canvas...');
+        
+        // Fade out loader
+        loader.style.opacity = '0';
+        
+        // Fade in Unity container
+        container.classList.add('loaded');
+        
+        // Remove loader from DOM after transition
+        setTimeout(() => {
+          loader.style.display = 'none';
+          console.log('✅ Custom loader completely hidden');
+        }, 1000);
+        
+        // Update page title
+        document.title = 'Zero G Pool';
       }
 
       // Load Unity
+      console.log('🚀 Starting Unity loader...');
+      
       const script = document.createElement("script");
       script.src = loaderUrl;
+      
       script.onload = () => {
+        console.log('📦 Unity loader script loaded successfully');
         const canvas = document.querySelector("#unity-canvas");
+        
         createUnityInstance(canvas, config, updateProgress)
           .then((unityInstance) => {
-            // Loading complete
+            console.log('✅ Unity instance created successfully!');
+            console.log('🎮 Unity Instance:', unityInstance);
+            
+            // Ensure final progress update
             updateProgress(1);
             
-            // Smooth transition
+            // Wait for Unity to fully render before hiding loader
+            setTimeout(() => {
+              console.log('🎬 Unity fully loaded, hiding custom loader now...');
+              hideLoader();
+            }, 1500);
+            
+            // Backup safety timer in case something goes wrong
             setTimeout(() => {
               const loader = document.getElementById('custom-loader');
-              const container = document.getElementById('unity-container');
-              
-              loader.classList.add('hidden');
-              container.classList.add('loaded');
-              
-              // Change page title
-              document.title = 'Zero G Pool';
-            }, 500);
+              if (loader && loader.style.display !== 'none') {
+                console.warn('⚠️ Loader still visible after 3s, force hiding...');
+                hideLoader();
+              }
+            }, 3000);
           })
           .catch((message) => {
+            console.error('❌ Unity loading failed:', message);
             unityShowBanner('Failed to load game: ' + message, 'error');
           });
       };
       
       script.onerror = () => {
+        console.error('❌ Failed to load Unity loader script from:', loaderUrl);
         unityShowBanner('Failed to load game files. Please refresh the page.', 'error');
       };
       
       document.body.appendChild(script);
+      console.log('📜 Unity loader script added to page');
     </script>
   </body>
 </html>
