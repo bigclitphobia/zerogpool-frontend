@@ -81,6 +81,13 @@ export async function getLeaderboard(): Promise<LeaderboardRow[]> {
   return data?.data || []
 }
 
+// Referral system
+export async function generateReferralCode(walletAddress: string): Promise<{ referralCode: string }> {
+  const body = JSON.stringify({ walletAddress })
+  const data: any = await request('/referral/generate', { method: 'POST', body, auth: true })
+  return data?.data
+}
+
 export const API = {
   API_BASE,
   getToken,
@@ -91,5 +98,5 @@ export const API = {
   updatePlayerName,
   getPlayerStats,
   getLeaderboard,
+  generateReferralCode,
 }
-

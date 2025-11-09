@@ -1,10 +1,11 @@
-// src/pages/ConnectPage.tsx
+// src/pages/HomePage.tsx
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import connectWalletImg from '../assets/connectWallet.png'
 import gameMannual from '../assets/gameMannual.png'
 import LoginModal from '../components/LoginModal'
+import ReferralModal from '../components/ReferralModal'
 import { getPlayerData, getToken } from '../lib/api'
 // header assets are handled in Layout; not needed here
 import rulesIcon from '../assets/rulesIcon.png';
@@ -18,6 +19,7 @@ export default function HomePage() {
   const { authenticated, logout, user } = usePrivy()
   const { wallets } = useWallets()
   const [showLogin, setShowLogin] = useState(false)
+  const [showReferral, setShowReferral] = useState(false)
   const [playerName, setPlayerName] = useState<string | null>(null)
   const navigate = useNavigate()
   const connectedAddress =
@@ -81,7 +83,7 @@ export default function HomePage() {
           </div>
 
         </div>
-        <div style={{background:'green'}}>
+        <div>
           <div className="absolute left-[12px] bottom-[12px] flex items-center gap-3">
             <button
               onClick={() => logout()}
@@ -92,6 +94,15 @@ export default function HomePage() {
               LOGOUT
             </button>
           </div>
+
+          {/* Referral button */}
+          <button 
+            onClick={() => setShowReferral(true)}
+            className="absolute left-[122px] bottom-[12px] rounded-2xl ring-1 ring-purple-400/50 bg-gradient-to-r from-purple-500/80 to-pink-500/80 px-4 py-2 hover:brightness-110 text-white text-sm font-semibold tracking-wide flex items-center gap-2"
+          >
+            <span className="text-lg">🎁</span>
+            REFERRAL
+          </button>
 
           <Link to="/rules" className="absolute right-[232px] bottom-[12px] rounded-2xl ring-1 ring-white/30 bg-black/30 px-4 py-2 hover:bg-black/40 text-white/95 text-sm font-semibold tracking-wide flex items-center gap-2">
             <img src={rulesIcon} alt="Rules" className="h-4 w-4" />
@@ -106,6 +117,8 @@ export default function HomePage() {
             NFT2
           </Link>
         </div>
+        
+        <ReferralModal open={showReferral} onClose={() => setShowReferral(false)} />
       </div>
     )
   }
