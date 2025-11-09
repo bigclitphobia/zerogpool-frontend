@@ -1,20 +1,18 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import { PrivyProvider } from '@privy-io/react-auth'
+import { PrivyProvider, type PrivyClientConfig } from '@privy-io/react-auth'
 import { WalletProvider } from './components/WalletContext'
 import './index.css'
 import App from './App'
 
-export const privyConfig = {
+export const privyConfig: PrivyClientConfig = {
   appearance: {
     theme: 'dark',
-    walletChainType: 'ethereum',
+    walletChainType: 'ethereum-only',
     walletList: [
-      'detected_ethereum_wallets',
       'metamask',
       'coinbase_wallet',
-      'walletconnect',
       'okx_wallet',
     ],
   },
@@ -23,7 +21,6 @@ export const privyConfig = {
     createOnLogin: 'users-without-wallets',
   },
   loginMethods: ['wallet', 'email', 'google'],
-  cookieOptions: { domain: undefined },
 }
 
 const appId = import.meta.env.VITE_PRIVY_APP_ID!  // must match Privy dashboard
