@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Zero G Pool | Loading...</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="manifest" href="manifest.webmanifest">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background: linear-gradient(135deg, #0a0e27 0%, #1a0b2e 50%, #16003b 100%);
+        font-family: 'Arial', sans-serif;
+        position: relative;
+      }
+
+      /* Animated background gradient */
+      body::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: 
+          radial-gradient(circle at 20% 80%, rgba(0, 178, 255, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(147, 51, 234, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.1) 0%, transparent 70%);
+        animation: gradientShift 8s ease infinite;
+      }
+
+      @keyframes gradientShift {
+        0%, 100% { opacity: 0.6; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.1); }
+      }
+
+      /* Unity canvas - hidden during load */
+      #unity-container {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 1s ease;
+      }
+
+      #unity-container.loaded {
+        opacity: 1;
+      }
+
+      #unity-canvas {
+        width: 900px;
+        height: 600px;
+        max-width: 100%;
+        max-height: 100%;
+        display: block;
+        border-radius: 8px;
+        box-shadow: 0 0 60px rgba(0, 178, 255, 0.4);
+      }
+
+      /* Custom Loading Screen */
+      #custom-loader {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        background: linear-gradient(135deg, #0a0e27 0%, #1a0b2e 50%, #16003b 100%);
+        transition: opacity 0.8s ease, visibility 0.8s ease;
+      }
+
+      #custom-loader.hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      /* Neon pool table frame */
+      .pool-table-frame {
+        position: absolute;
+        width: 500px;
+        height: 300px;
+        border: 3px solid transparent;
+        border-radius: 20px;
+        background: linear-gradient(#0a0e27, #0a0e27) padding-box,
+                    linear-gradient(90deg, #00b2ff, #9333ea, #00b2ff) border-box;
+        animation: borderGlow 3s ease infinite;
+        opacity: 0.3;
+      }
+
+      @keyframes borderGlow {
+        0%, 100% { 
+          box-shadow: 0 0 20px rgba(0, 178, 255, 0.6),
+                      inset 0 0 20px rgba(0, 178, 255, 0.1);
+        }
+        50% { 
+          box-shadow: 0 0 40px rgba(147, 51, 234, 0.8),
+                      inset 0 0 30px rgba(147, 51, 234, 0.2);
+        }
+      }
+
+      /* 8-Ball Animation */
+      .ball-container {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        margin-bottom: 60px;
+      }
+
+      .ball-8 {
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle at 35% 35%, #333, #000);
+        border-radius: 50%;
+        position: relative;
+        animation: ballSpin 3s linear infinite, ballFloat 2s ease-in-out infinite;
+        box-shadow: 
+          0 10px 60px rgba(0, 178, 255, 0.6),
+          inset -10px -10px 20px rgba(0, 0, 0, 0.8),
+          inset 10px 10px 20px rgba(255, 255, 255, 0.1);
+      }
+
+      @keyframes ballSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      @keyframes ballFloat {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+      }
+
+      /* White circle on 8-ball */
+      .ball-8::before {
+        content: '';
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        background: radial-gradient(circle at 30% 30%, #fff, #ddd);
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: inset -5px -5px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Number 8 */
+      .ball-8::after {
+        content: '8';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 48px;
+        font-weight: bold;
+        color: #000;
+        text-shadow: 0 2px 4px rgba(255, 255, 255, 0.3);
+        z-index: 1;
+      }
+
+      /* Glow effect around ball */
+      .ball-glow {
+        position: absolute;
+        inset: -20px;
+        background: radial-gradient(circle, rgba(0, 178, 255, 0.4), transparent 70%);
+        border-radius: 50%;
+        animation: glowPulse 2s ease-in-out infinite;
+        filter: blur(20px);
+      }
+
+      @keyframes glowPulse {
+        0%, 100% { opacity: 0.5; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.2); }
+      }
+
+      /* Orbiting pool balls */
+      .orbit-ball {
+        position: absolute;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+      }
+
+      .orbit-ball:nth-child(1) {
+        background: radial-gradient(circle at 35% 35%, #ffeb3b, #ff9800);
+        animation: orbit 4s linear infinite;
+      }
+
+      .orbit-ball:nth-child(2) {
+        background: radial-gradient(circle at 35% 35%, #f44336, #c62828);
+        animation: orbit 4s linear infinite 0.5s;
+      }
+
+      .orbit-ball:nth-child(3) {
+        background: radial-gradient(circle at 35% 35%, #2196f3, #1565c0);
+        animation: orbit 4s linear infinite 1s;
+      }
+
+      .orbit-ball:nth-child(4) {
+        background: radial-gradient(circle at 35% 35%, #4caf50, #2e7d32);
+        animation: orbit 4s linear infinite 1.5s;
+      }
+
+      .orbit-ball:nth-child(5) {
+        background: radial-gradient(circle at 35% 35%, #9c27b0, #6a1b9a);
+        animation: orbit 4s linear infinite 2s;
+      }
+
+      @keyframes orbit {
+        0% {
+          transform: rotate(0deg) translateX(120px) rotate(0deg);
+          opacity: 0.5;
+        }
+        50% {
+          opacity: 1;
+        }
+        100% {
+          transform: rotate(360deg) translateX(120px) rotate(-360deg);
+          opacity: 0.5;
+        }
+      }
+
+      /* Loading text */
+      .loading-text {
+        font-size: 42px;
+        font-weight: bold;
+        background: linear-gradient(90deg, #00b2ff, #06b6d4, #9333ea, #00b2ff);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradientText 3s linear infinite;
+        margin-bottom: 30px;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        text-shadow: 0 0 30px rgba(0, 178, 255, 0.5);
+      }
+
+      @keyframes gradientText {
+        0% { background-position: 0% center; }
+        100% { background-position: 200% center; }
+      }
+
+      /* Progress container */
+      .progress-container {
+        width: 400px;
+        max-width: 90vw;
+        position: relative;
+        margin-top: 20px;
+      }
+
+      /* Cue stick */
+      .cue-stick {
+        position: absolute;
+        width: 0;
+        height: 6px;
+        background: linear-gradient(90deg, 
+          #8b4513 0%, 
+          #d2691e 40%, 
+          #f5deb3 45%, 
+          #ffffff 50%, 
+          #f5deb3 55%, 
+          #d2691e 60%, 
+          #8b4513 100%);
+        border-radius: 3px;
+        top: -30px;
+        left: 0;
+        box-shadow: 0 2px 10px rgba(139, 69, 19, 0.6),
+                    0 0 20px rgba(0, 178, 255, 0.3);
+        transition: width 0.3s ease;
+      }
+
+      .cue-stick::before {
+        content: '';
+        position: absolute;
+        right: -8px;
+        top: -2px;
+        width: 10px;
+        height: 10px;
+        background: radial-gradient(circle, #fff, #ccc);
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+      }
+
+      /* Progress bar background */
+      .progress-bg {
+        width: 100%;
+        height: 8px;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid rgba(0, 178, 255, 0.3);
+        position: relative;
+      }
+
+      /* Progress bar fill */
+      .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, 
+          #00b2ff 0%, 
+          #06b6d4 50%, 
+          #9333ea 100%);
+        border-radius: 10px;
+        position: relative;
+        transition: width 0.3s ease;
+        box-shadow: 0 0 20px rgba(0, 178, 255, 0.8);
+      }
+
+      .progress-fill::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, 
+          transparent 0%, 
+          rgba(255, 255, 255, 0.3) 50%, 
+          transparent 100%);
+        animation: shimmer 2s infinite;
+      }
+
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+
+      /* Progress percentage */
+      .progress-text {
+        margin-top: 15px;
+        font-size: 18px;
+        color: #00b2ff;
+        font-weight: bold;
+        text-align: center;
+        text-shadow: 0 0 10px rgba(0, 178, 255, 0.6);
+        letter-spacing: 2px;
+      }
+
+      /* Loading tips */
+      .loading-tip {
+        margin-top: 40px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.7);
+        text-align: center;
+        max-width: 500px;
+        line-height: 1.6;
+        animation: tipFade 8s ease-in-out infinite;
+      }
+
+      @keyframes tipFade {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 1; }
+      }
+
+      /* Particle effects */
+      .particle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        background: rgba(0, 178, 255, 0.8);
+        border-radius: 50%;
+        pointer-events: none;
+        animation: particleFloat 6s ease-in-out infinite;
+      }
+
+      @keyframes particleFloat {
+        0% {
+          transform: translateY(0) translateX(0);
+          opacity: 0;
+        }
+        10% {
+          opacity: 1;
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-100vh) translateX(var(--drift));
+          opacity: 0;
+        }
+      }
+
+      /* Error banner */
+      #unity-warning {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        max-width: 90%;
+        z-index: 2000;
+      }
+
+      #unity-warning > div {
+        padding: 15px 25px;
+        border-radius: 10px;
+        font-size: 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        animation: slideDown 0.3s ease;
+      }
+
+      @keyframes slideDown {
+        from {
+          transform: translateY(-100px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      /* Mobile responsive */
+      @media (max-width: 768px) {
+        .ball-8 {
+          width: 150px;
+          height: 150px;
+        }
+        
+        .ball-8::before {
+          width: 60px;
+          height: 60px;
+        }
+        
+        .ball-8::after {
+          font-size: 36px;
+        }
+        
+        .loading-text {
+          font-size: 32px;
+        }
+        
+        .pool-table-frame {
+          width: 90vw;
+          height: 200px;
+        }
+        
+        .progress-container {
+          width: 90vw;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Custom Loading Screen -->
+    <div id="custom-loader">
+      <!-- Background pool table frame -->
+      <div class="pool-table-frame"></div>
+      
+      <!-- Main 8-ball with orbiting balls -->
+      <div class="ball-container">
+        <div class="ball-glow"></div>
+        <div class="ball-8"></div>
+        <div class="orbit-ball"></div>
+        <div class="orbit-ball"></div>
+        <div class="orbit-ball"></div>
+        <div class="orbit-ball"></div>
+        <div class="orbit-ball"></div>
+      </div>
+      
+      <!-- Loading text -->
+      <div class="loading-text">Zero G Pool</div>
+      
+      <!-- Progress bar with cue stick -->
+      <div class="progress-container">
+        <div class="cue-stick" id="cue-stick"></div>
+        <div class="progress-bg">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-text" id="progress-text">0%</div>
+      </div>
+      
+      <!-- Loading tip -->
+      <div class="loading-tip" id="loading-tip">
+        Preparing your ultimate pool experience...
+      </div>
+    </div>
+
+    <!-- Unity Container -->
+    <div id="unity-container">
+      <canvas id="unity-canvas" width="900" height="600" tabindex="-1"></canvas>
+      <div id="unity-warning"></div>
+    </div>
+
+    <script>
+      // Loading tips rotation
+      const tips = [
+        "Preparing your ultimate pool experience...",
+        "Rack 'em up! Loading the perfect shot...",
+        "Chalking up the cue for precision...",
+        "Aligning the perfect break...",
+        "Setting up the table for zero gravity action...",
+        "Loading championship-level physics...",
+        "Initializing the perfect pocket precision...",
+        "Preparing the neon felt experience..."
+      ];
+      
+      let tipIndex = 0;
+      const tipElement = document.getElementById('loading-tip');
+      
+      setInterval(() => {
+        tipIndex = (tipIndex + 1) % tips.length;
+        tipElement.style.opacity = '0';
+        setTimeout(() => {
+          tipElement.textContent = tips[tipIndex];
+          tipElement.style.opacity = '1';
+        }, 300);
+      }, 4000);
+
+      // Create floating particles
+      function createParticles() {
+        for (let i = 0; i < 30; i++) {
+          setTimeout(() => {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + 'vw';
+            particle.style.setProperty('--drift', (Math.random() - 0.5) * 200 + 'px');
+            particle.style.animationDelay = Math.random() * 6 + 's';
+            particle.style.animationDuration = (4 + Math.random() * 4) + 's';
+            document.body.appendChild(particle);
+            
+            setTimeout(() => particle.remove(), 10000);
+          }, i * 200);
+        }
+      }
+      
+      createParticles();
+      setInterval(createParticles, 10000);
+
+      // Service Worker
+      window.addEventListener("load", function () {
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.register("ServiceWorker.js").catch(() => {});
+        }
+      });
+
+      // Unity warning banner
+      function unityShowBanner(msg, type) {
+        const warningBanner = document.querySelector("#unity-warning");
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        const div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type === 'error') {
+          div.style.cssText = 'background: linear-gradient(135deg, #dc2626, #991b1b); color: white; font-weight: bold;';
+        } else if (type === 'warning') {
+          div.style.cssText = 'background: linear-gradient(135deg, #f59e0b, #d97706); color: white; font-weight: bold;';
+        }
+        
+        if (type !== 'error') {
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+      }
+
+      // Unity configuration
+      const buildUrl = "Build";
+      const loaderUrl = buildUrl + "/Game.loader.js";
+      const config = {
+        arguments: [],
+        dataUrl: buildUrl + "/Game.data",
+        frameworkUrl: buildUrl + "/Game.framework.js",
+        codeUrl: buildUrl + "/Game.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "Kult Games",
+        productName: "ZeroGPool",
+        productVersion: "1.2",
+        showBanner: unityShowBanner,
+      };
+
+      // Mobile viewport
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        const meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+      }
+
+      // Progress update function
+      function updateProgress(progress) {
+        const percentage = Math.round(progress * 100);
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        const cueStick = document.getElementById('cue-stick');
+        
+        if (progressFill) progressFill.style.width = percentage + '%';
+        if (progressText) progressText.textContent = percentage + '%';
+        if (cueStick) cueStick.style.width = (percentage * 4) + 'px';
+      }
+
+      // Load Unity
+      const script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        const canvas = document.querySelector("#unity-canvas");
+        createUnityInstance(canvas, config, updateProgress)
+          .then((unityInstance) => {
+            // Loading complete
+            updateProgress(1);
+            
+            // Smooth transition
+            setTimeout(() => {
+              const loader = document.getElementById('custom-loader');
+              const container = document.getElementById('unity-container');
+              
+              loader.classList.add('hidden');
+              container.classList.add('loaded');
+              
+              // Change page title
+              document.title = 'Zero G Pool';
+            }, 500);
+          })
+          .catch((message) => {
+            unityShowBanner('Failed to load game: ' + message, 'error');
+          });
+      };
+      
+      script.onerror = () => {
+        unityShowBanner('Failed to load game files. Please refresh the page.', 'error');
+      };
+      
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>
