@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
-import { useWallet } from './WalletContext'
 import bg from '../assets/bg.png'
 import bgBlur from '../assets/bgBlur.png'
 import backImg from '../assets/back.png'
@@ -12,8 +11,7 @@ import coinIcon from '../assets/coin.png'
 import trophyIcon from '../assets/trophy.png'
 
 const Layout: React.FC = () => {
-  const { isConnected } = useWallet()
-  const { authenticated, logout, user } = usePrivy()
+  const { authenticated, user } = usePrivy()
   const { wallets } = useWallets()
   const location = useLocation()
   const navigate = useNavigate()

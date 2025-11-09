@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import {
   useConnectWallet,
   useLoginWithEmail,
@@ -436,7 +436,7 @@ export default function LoginModal({
     try {
       try { if (dialogRef.current?.open) dialogRef.current.close() } catch {}
       onClose?.()
-      await connectWallet({ walletList: [wallet], walletChainType: 'ethereum-only' })
+      await connectWallet({ walletList: [wallet] })
     } catch (err: any) {
       console.error('connectWith error', err)
       setError(err?.message || 'Failed to connect wallet')
@@ -511,7 +511,6 @@ export default function LoginModal({
 
   // UI rules
   const showCustomCreateUI = Boolean(authenticated && !hasAnyWallet)
-  const authOptionsDisabled = emailStep === 'enter-code' || showCustomCreateUI
 
   // Unified close handler: if user is authenticated but lacks a wallet
   // (i.e., seeing CreateWalletPanel), closing should log them out.
