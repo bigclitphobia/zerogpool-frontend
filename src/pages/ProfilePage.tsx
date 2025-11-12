@@ -4,7 +4,7 @@ import profileIcon from '../assets/profileIcon.png'
 import frameLg from '../assets/leaderboardFrame.png'
 import trophy from '../assets/trophy.png'
 import ball5 from '../assets/balls/ball-5.png'
-import { getPlayerData, updatePlayerName, getPlayerStats, getToken } from '../lib/api'
+import { getPlayerData, updatePlayerName, getPlayerStats, getToken, setToken } from '../lib/api'
 
 function formatPlayTime(totalMinutes: number | undefined) {
   if (!totalMinutes || totalMinutes <= 0) return '—'
@@ -24,8 +24,9 @@ const Row = ({ icon, label, value }: { icon: React.ReactNode; label: string; val
   </div>
 )
 
+
 const ProfilePage = () => {
-  const { authenticated, user } = usePrivy()
+  const { authenticated, user, logout } = usePrivy()
   const { wallets } = useWallets()
   const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
@@ -67,6 +68,19 @@ const ProfilePage = () => {
 
   const short = useMemo(() => (address ? `${address.slice(0, 6)}…${address.slice(-4)}` : ''), [address])
 
+  async function handleLogout() {
+    try {
+      await logout()
+    } finally {
+      // Clear backend JWT and any local wallet connection flag
+      setToken(null)
+      try {
+        localStorage.removeItem("walletAddress")
+        localStorage.removeItem('wallet_connected')
+      } catch {}
+    }
+  }
+
   async function save() {
     if (!name.trim()) return
     setSaving(true)
@@ -98,21 +112,9 @@ const ProfilePage = () => {
                     {address && <div className="text-white/80 text-sm font-mono">{short}</div>}
                   </div>
                 </div>
-                <div className="flex items-center gap-3 min-w-[320px]">
-                  <input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Update username"
-                    className="flex-1 rounded-xl bg-black/30 border border-white/15 px-4 py-2.5 text-white/90 outline-none focus:border-cyan-400"
-                  />
-                  <button
-                    onClick={save}
-                    disabled={!name.trim() || saving}
-                    className="whitespace-nowrap rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-                  >
-                    {saving ? 'Saving…' : 'Save'}
-                  </button>
-                </div>
+                <button onClick={handleLogout} className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 px-4 py-2 text-sm font-semibold text-white">
+                  Logout
+                </button>
               </div>
 
               {/* Stats list */}
@@ -128,14 +130,19 @@ const ProfilePage = () => {
 
         {/* Mobile simple layout (no frame) */}
         <div className="md:hidden w-full mt-4">
-          <div className="flex items-center gap-4 mb-3">
-            <img src={profileIcon} className="h-14 w-14 rounded-full ring-2 ring-white/40" alt="Profile" />
-            <div>
-              <div className="text-white text-2xl font-extrabold tracking-wide">{name || 'Your username'}</div>
-              {address && <div className="text-white/80 text-sm font-mono">{short}</div>}
+          <div className="flex items-center justify-between gap-4 mb-3">
+            <div className="flex items-center gap-4">
+              <img src={profileIcon} className="h-14 w-14 rounded-full ring-2 ring-white/40" alt="Profile" />
+              <div>
+                <div className="text-white text-2xl font-extrabold tracking-wide">{name || 'Your username'}</div>
+                {address && <div className="text-white/80 text-sm font-mono">{short}</div>}
+              </div>
             </div>
+            <button onClick={handleLogout} className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 px-3 py-2 text-sm font-semibold text-white">
+              Logout
+            </button>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+          {/* <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
             <label className="block text-sm text-white/80 mb-2">Update Username</label>
             <div className="flex items-center gap-3">
               <input
@@ -148,7 +155,7 @@ const ProfilePage = () => {
                 {saving ? 'Saving…' : 'Save'}
               </button>
             </div>
-          </div>
+          </div> */}
           <div className="mt-4 rounded-[16px] bg-black/30 border border-white/10 divide-y divide-white/10">
             <Row icon={<span className="text-cyan-300">⏱</span>} label="TOTAL TIME PLAYED" value={formatPlayTime(stats?.totalTimePlayed)} />
             <Row icon={<span className="text-pink-300">🎮</span>} label="GAMES PLAYED" value={loadingStats ? '—' : gamesPlayed.toLocaleString()} />
