@@ -2,7 +2,7 @@
 
 const API_BASE = (import.meta as any).env?.VITE_BACKEND_URL || 'http://localhost:3000/api'
 const TOKEN_KEY = 'jwt_token'
-
+const WALLET_KEY = "walletAddress"
 export function getToken(): string | null {
   try {
     return localStorage.getItem(TOKEN_KEY)
@@ -19,6 +19,16 @@ export function setToken(token: string | null) {
     // ignore storage errors
   }
 }
+
+export function setWalletAddress(wallet: string | null) {
+  try {
+    if (!wallet) localStorage.removeItem(WALLET_KEY)
+    else localStorage.setItem(WALLET_KEY, wallet)
+  } catch {
+    // ignore storage errors
+  }
+}
+
 
 type RequestOptions = RequestInit & { auth?: boolean }
 
@@ -44,6 +54,9 @@ export async function loginWithWallet(walletAddress: string): Promise<{ token: s
   const body = JSON.stringify({ walletAddress })
   const data: any = await request('/auth/login', { method: 'POST', body })
   const token = data?.data?.token
+  const _walletAddress = data?.data?.walletAddress;
+  console.log("my data is",data);
+  if(_walletAddress) setWalletAddress(_walletAddress);
   if (token) setToken(token)
   return token ? { token } : null
 }

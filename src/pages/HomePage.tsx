@@ -64,6 +64,30 @@ export default function HomePage() {
   console.log("connected Address is ",connectedAddress," player Name is ",playerName)
   // When authenticated, show post-login UI
 
+  async function startSession() {
+    // Wait briefly for JWT from backend login via WalletContext
+    let token = getToken()
+    let attempts = 0
+    while (!token && attempts < 6) {
+      await new Promise((r) => setTimeout(r, 250))
+      token = getToken()
+      attempts += 1
+    }
+    if (!token) {
+      // Fallback to NFT page; it will handle redirect if name already exists
+      navigate('/nft1')
+      return
+    }
+    try {
+      const data = await getPlayerData()
+      const hasName = !!(data && (data as any).playerNames0 && String((data as any).playerNames0).trim())
+      navigate(hasName ? '/game' : '/nft1')
+    } catch {
+      // On error, send to NFT gate where it can proceed once name is saved
+      navigate('/nft1')
+    }
+  }
+
   if (authenticated) {
     return (
       <div className="relative w-full h-full flex-1">
@@ -74,7 +98,7 @@ export default function HomePage() {
           </div>
 
           <div className="mt-6 flex flex-col md:flex-row items-center justify-center gap-4 sm:gap-5">
-            <button onClick={() => navigate('/nft1')} className="group active:scale-[0.99]">
+            <button onClick={startSession} className="group active:scale-[0.99]">
               <img src={startSeesionBtnIcon} alt="Start Session" className="h-18 sm:h-20 w-auto drop-shadow-[0_6px_18px_rgba(0,0,0,0.35)] group-hover:brightness-110 transition" />
             </button>
             <Link to="/leaderboard" className="group active:scale-[0.99]">
@@ -84,37 +108,20 @@ export default function HomePage() {
 
         </div>
         <div>
-          <div className="absolute left-[12px] bottom-[12px] flex items-center gap-3">
-            <button
-              onClick={() => logout()}
-              title="Logout"
-              className="flex items-center gap-2 rounded-2xl ring-1 ring-cyan-300/60 px-4 py-2 bg-black/30 text-cyan-100 hover:bg-black/40 text-sm font-semibold tracking-wide active:scale-95"
-            >
-              <img src={logoutImage} alt="Logout" className="h-4 w-4" />
-              LOGOUT
-            </button>
-          </div>
 
-          {/* Referral button */}
-          <button 
+        <button 
             onClick={() => setShowReferral(true)}
-            className="absolute left-[122px] bottom-[12px] rounded-2xl ring-1 ring-purple-400/50 bg-gradient-to-r from-purple-500/80 to-pink-500/80 px-4 py-2 hover:brightness-110 text-white text-sm font-semibold tracking-wide flex items-center gap-2"
+            style={{borderRadius:'100px'}}
+            className="absolute left-[12px] bottom-[12px] rounded-2xl ring-1 ring-white/30 bg-black/30 px-4 py-1 hover:bg-black/40 text-white/95 text-sm font-semibold tracking-wide flex items-center gap-2"
           >
             <span className="text-lg">🎁</span>
             REFERRAL
           </button>
+          
 
-          <Link to="/rules" className="absolute right-[232px] bottom-[12px] rounded-2xl ring-1 ring-white/30 bg-black/30 px-4 py-2 hover:bg-black/40 text-white/95 text-sm font-semibold tracking-wide flex items-center gap-2">
+          <Link to="/rules" className="absolute right-[12px] bottom-[12px] rounded-2xl ring-1 ring-white/30 bg-black/30 px-4 py-2 hover:bg-black/40 text-white/95 text-sm font-semibold tracking-wide flex items-center gap-2">
             <img src={rulesIcon} alt="Rules" className="h-4 w-4" />
             RULES
-          </Link>
-          <Link to="/nft1" className="absolute right-[122px] bottom-[12px] rounded-2xl ring-1 ring-white/30 bg-black/30 px-4 py-2 hover:bg-black/40 text-white/95 text-sm font-semibold tracking-wide flex items-center gap-2">
-            <img src={rulesIcon} alt="Rules" className="h-4 w-4" />
-            NFT1
-          </Link>
-          <Link to="/nft2" className="absolute right-[12px] bottom-[12px] rounded-2xl ring-1 ring-white/30 bg-black/30 px-4 py-2 hover:bg-black/40 text-white/95 text-sm font-semibold tracking-wide flex items-center gap-2">
-            <img src={rulesIcon} alt="Rules" className="h-4 w-4" />
-            NFT2
           </Link>
         </div>
         

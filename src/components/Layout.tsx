@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import bg from '../assets/bg.png'
@@ -7,8 +7,9 @@ import backImg from '../assets/back.png'
 import ogImg from '../assets/OG.png'
 import LoginModal from './LoginModal'
 import profileIcon from '../assets/profileIcon.png'
-import coinIcon from '../assets/coin.png'
+import ball1 from '../assets/balls/ball-1.png'
 import trophyIcon from '../assets/trophy.png'
+import { getPlayerData, getPlayerStats, getToken } from '../lib/api'
 
 const Layout: React.FC = () => {
   const { authenticated, user } = usePrivy()
@@ -17,8 +18,9 @@ const Layout: React.FC = () => {
   const navigate = useNavigate()
   const [showLogin, setShowLogin] = useState(false)
   const isHome = location.pathname === '/'
-  // Blur background when not logged in
-  const bgImage = authenticated ? bg : bgBlur
+  // Home page uses the same background for connected/not connected
+  // Other pages keep blurred bg when not authenticated
+  const bgImage = isHome ? bg : (authenticated ? bg : bgBlur)
 
   const connectedAddress =
     (user as any)?.wallet?.address ||
@@ -29,6 +31,59 @@ const Layout: React.FC = () => {
     const a = connectedAddress || ''
     return a ? `${a.slice(0, 6)}…${a.slice(-4)}` : ''
   }, [connectedAddress])
+
+  // Header dynamic values
+  const [wins, setWins] = useState<number | null>(null)
+  const [coins, setCoins] = useState<number | null>(null)
+  const [playerName, setPlayerName] = useState<string | null>(null)
+
+  const displayName = useMemo(() => {
+    if (playerName && playerName.length > 13) return playerName.slice(0, 13) + '...'
+    return playerName || ''
+  }, [playerName])
+
+  // Fetch profile + stats once authenticated and JWT available
+  useEffect(() => {
+    if (!authenticated) {
+      setWins(null)
+      setCoins(null)
+      setPlayerName(null)
+      return
+    }
+    let active = true
+    let attempts = 0
+    const load = () => {
+      if (!active) return
+      const token = getToken()
+      if (!token) {
+        if (attempts < 6) {
+          attempts += 1
+          setTimeout(load, 400)
+        }
+        return
+      }
+      getPlayerData()
+        .then((d) => {
+          if (!active) return
+          const n = (d && (d as any).playerNames0) || null
+          setPlayerName(n)
+        })
+        .catch(() => {})
+      getPlayerStats()
+        .then((s) => {
+          if (!active) return
+          const totalWins = ((s?.totalGamesWonVsCPU || 0) + (s?.totalGamesWonVsHuman || 0)) as number
+          const totalCoins = (s?.totalBallsPocketed ?? 0) as number
+          setWins(totalWins)
+          setCoins(totalCoins)
+        })
+        .catch(() => {})
+    }
+    load()
+    return () => {
+      active = false
+    }
+  }, [authenticated])
 
   function handleBack() {
     const idx = (window.history.state && (window.history.state as any).idx) ?? 0
@@ -69,23 +124,23 @@ const Layout: React.FC = () => {
                     <img src={backImg} alt="Back" className="h-6 sm:h-7 md:h-8 object-contain" />
                   </button>
                 )}
-                <div className="flex items-center gap-2 bg-indigo-600/80 rounded-xl px-3 py-1.5 ring-1 ring-white/20 shadow-md">
-                  <img src={trophyIcon} alt="Wins" className="h-5 w-5" />
-                  <span className="text-white text-sm font-extrabold">100 WINS</span>
+                <div className="flex items-center gap-2 bg-indigo-600/80 rounded-xl px-4 py-2 sm:px-3 sm:py-1.5 ring-1 ring-white/20 shadow-md">
+                  <img src={trophyIcon} alt="Wins" className="h-6 w-6 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                  <span className="text-white text-base sm:text-sm md:text-base font-extrabold">{(wins ?? 0).toLocaleString()} WINS</span>
                 </div>
-                <div className="flex items-center gap-2 bg-blue-600/80 rounded-xl px-3 py-1.5 ring-1 ring-white/20 shadow-md">
-                  <img src={coinIcon} alt="Coins" className="h-5 w-5" />
-                  <span className="text-white text-sm font-extrabold">2000</span>
+                <div className="flex items-center gap-2 bg-blue-600/80 rounded-xl px-4 py-2 sm:px-3 sm:py-1.5 ring-1 ring-white/20 shadow-md">
+                  <img src={ball1} alt="Balls" className="h-6 w-6 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                  <span className="text-white text-base sm:text-sm md:text-base font-extrabold">{(coins ?? 0).toLocaleString()}</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <Link to="/profile" className="flex items-center gap-2 bg-gradient-to-r from-sky-500/70 to-blue-500/70 backdrop-blur rounded-2xl pl-1 pr-3 py-1 ring-1 ring-white/20 shadow-[0_6px_18px_rgba(0,0,0,0.25)] cursor-pointer">
-                  <img src={profileIcon} alt="Profile" className="h-9 w-9 rounded-full ring-2 ring-white/40" />
+                <Link to="/profile" className="flex items-center gap-2 bg-gradient-to-r from-sky-500/70 to-blue-500/70 backdrop-blur rounded-2xl pl-1.5 pr-3.5 py-1.5 sm:pl-1 sm:pr-3 sm:py-1 ring-1 ring-white/20 shadow-[0_6px_18px_rgba(0,0,0,0.25)] cursor-pointer">
+                  <img src={profileIcon} alt="Profile" className="h-10 w-10 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-full ring-2 ring-white/40" />
                   {/* Hide wallet text on mobile for all pages; show only the icon */}
                   <div className="hidden sm:flex flex-col leading-tight">
-                    <span className="text-white text-sm font-bold tracking-wide">{shortAddress || 'Connected'}</span>
-                    {connectedAddress && (
+                    <span className="text-white text-sm font-bold tracking-wide">{displayName || shortAddress || 'Connected'}</span>
+                    {connectedAddress && playerName && (
                       <span className="text-white/80 text-[11px] font-mono">{shortAddress}</span>
                     )}
                   </div>
