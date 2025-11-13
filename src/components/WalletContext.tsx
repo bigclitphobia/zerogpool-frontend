@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import type React from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { loginWithWallet, setToken } from '../lib/api'
 
