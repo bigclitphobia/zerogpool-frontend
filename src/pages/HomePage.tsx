@@ -11,11 +11,11 @@ import { getPlayerData, getToken } from '../lib/api'
 import rulesIcon from '../assets/rulesIcon.png';
 import leaderboardBtnIcon from '../assets/leaderboard.png';
 import startSeesionBtnIcon from '../assets/startSession.png';
-import logoutImage from '../assets/LogoutIcon.png';
+// import logoutImage from '../assets/LogoutIcon.png';
 import centerLogo from '../assets/logo.png';
 
 export default function HomePage() {
-  const { authenticated, logout, user } = usePrivy()
+  const { authenticated, user } = usePrivy() // removed logout
   const { wallets } = useWallets()
   const [showLogin, setShowLogin] = useState(false)
   const [showReferral, setShowReferral] = useState(false)
