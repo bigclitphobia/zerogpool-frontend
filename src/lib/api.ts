@@ -100,7 +100,7 @@ export const generateReferralCode = async (
   signature: string,
   nonce: number
 ) => {
-  const res = await fetch("/api/referral/generate", {
+  const res = await fetch("https://zerogpoolgame.onrender.com/api/referral/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ walletAddress, signature, nonce }),
@@ -108,6 +108,7 @@ export const generateReferralCode = async (
 
   return res.json();
 };
+
 
 export const API = {
   API_BASE,
