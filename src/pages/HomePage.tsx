@@ -18,7 +18,7 @@ export default function HomePage() {
   const { authenticated, user } = usePrivy() // removed logout
   const { wallets } = useWallets()
   const [showLogin, setShowLogin] = useState(false)
-  const [showReferral, setShowReferral] = useState(false)
+  // const [showReferral, setShowReferral] = useState(false)
   const [playerName, setPlayerName] = useState<string | null>(null)
   const navigate = useNavigate()
   const connectedAddress =
