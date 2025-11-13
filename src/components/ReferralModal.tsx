@@ -1,83 +1,125 @@
-import { useEffect, useRef, useState } from 'react'
-import type React from 'react'
-import { usePrivy, useWallets } from '@privy-io/react-auth'
-import { generateReferralCode } from '../lib/api'
+import { useEffect, useRef, useState } from "react";
+import type React from "react";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { generateReferralCode } from "../lib/api";
 
 type ReferralModalProps = {
-  open: boolean
-  onClose: () => void
-}
+  open: boolean;
+  onClose: () => void;
+};
 
 const ReferralModal: React.FC<ReferralModalProps> = ({ open, onClose }) => {
-  const dialogRef = useRef<HTMLDialogElement | null>(null)
-  const { user } = usePrivy()
-  const { wallets } = useWallets()
-  const [referralCode, setReferralCode] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const { user } = usePrivy();
+  const { wallets } = useWallets();
 
+  // ----------------------------------------------
+  // STATE
+  // ----------------------------------------------
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralLink, setReferralLink] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  // ----------------------------------------------
+  // GET CONNECTED WALLET ADDRESS
+  // ----------------------------------------------
   const walletAddress =
     (user as any)?.wallet?.address ||
     (user as any)?.embeddedWallets?.[0]?.address ||
-    wallets.find((w) => !!w.address)?.address
+    wallets.find((w) => !!w.address)?.address;
 
+  // ----------------------------------------------
+  // OPEN/CLOSE MODAL
+  // ----------------------------------------------
   useEffect(() => {
     if (open && dialogRef.current && !dialogRef.current.open) {
-      dialogRef.current.showModal()
+      dialogRef.current.showModal();
     }
     if (!open && dialogRef.current?.open) {
-      dialogRef.current.close()
+      dialogRef.current.close();
     }
     return () => {
       try {
-        if (dialogRef.current?.open) dialogRef.current.close()
+        if (dialogRef.current?.open) dialogRef.current.close();
       } catch {}
-    }
-  }, [open])
+    };
+  }, [open]);
 
+  // Reset state when closing modal
   useEffect(() => {
     if (!open) {
-      setReferralCode(null)
-      setError(null)
-      setCopied(false)
+      setReferralCode(null);
+      setReferralLink(null);
+      setError(null);
+      setCopied(false);
     }
-  }, [open])
+  }, [open]);
 
+  // ----------------------------------------------
+  // SIGN MESSAGE + GENERATE REFERRAL
+  // ----------------------------------------------
   const handleGenerateReferral = async () => {
     if (!walletAddress) {
-      setError('No wallet connected')
-      return
+      setError("No wallet connected");
+      return;
     }
 
-    setLoading(true)
-    setError(null)
-    
+    // Primary wallet object from Privy
+    const primaryWallet = wallets[0];
+
+    if (!primaryWallet || !primaryWallet.signMessage) {
+      setError("Wallet cannot sign messages. Use a standard wallet.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
     try {
-      // Optional: Add wallet signature here if needed
-      // For now, we'll skip the signature as per user's request
-      
-      const response = await generateReferralCode(walletAddress)
-      setReferralCode(response.referralCode)
+      // Create message
+      const message = `ZeroGPool Referral Verification
+Wallet: ${walletAddress}
+Nonce: ${Date.now()}`;
+
+      // Sign message
+      let signature = "";
+      try {
+        signature = await primaryWallet.signMessage(message);
+      } catch (err) {
+        setError("Signature rejected by user");
+        setLoading(false);
+        return;
+      }
+
+      // Make API call
+      const response = await generateReferralCode(walletAddress, signature);
+
+      setReferralCode(response.referralCode);
+      setReferralLink(response.referralLink);
+
     } catch (err: any) {
-      setError(err?.message || 'Failed to generate referral code')
+      setError(err?.message || "Failed to generate referral code");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const referralLink = referralCode 
-    ? `${window.location.origin}?ref=${referralCode}` 
-    : ''
-
+  // ----------------------------------------------
+  // COPY FUNCTION
+  // ----------------------------------------------
   const handleCopy = () => {
     if (referralLink) {
-      navigator.clipboard.writeText(referralLink)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      navigator.clipboard.writeText(referralLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
-  }
+  };
 
+  // ----------------------------------------------
+  // UI
+  // ----------------------------------------------
   return (
     <dialog
       ref={dialogRef}
@@ -115,12 +157,13 @@ const ReferralModal: React.FC<ReferralModalProps> = ({ open, onClose }) => {
             <p className="text-white/80 text-sm text-center">
               Generate your unique referral code and share it with friends to earn rewards!
             </p>
+
             <button
               onClick={handleGenerateReferral}
               disabled={loading}
               className="w-full inline-flex items-center justify-center rounded-2xl border border-cyan-400/50 bg-gradient-to-tr from-cyan-500 to-blue-500 px-5 py-3 font-bold text-white shadow-[0_10px_28px_rgba(0,178,255,0.35)] hover:shadow-[0_14px_34px_rgba(0,178,255,0.45)] active:scale-[.98] disabled:opacity-60"
             >
-              {loading ? 'Generating...' : 'Generate Referral Code'}
+              {loading ? "Signing..." : "Generate Referral Code"}
             </button>
           </div>
         ) : (
@@ -137,7 +180,7 @@ const ReferralModal: React.FC<ReferralModalProps> = ({ open, onClose }) => {
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  value={referralLink}
+                  value={referralLink || ""}
                   readOnly
                   className="flex-1 bg-black/30 border border-white/20 rounded-lg px-3 py-2 text-sm text-white/90 font-mono"
                 />
@@ -145,19 +188,19 @@ const ReferralModal: React.FC<ReferralModalProps> = ({ open, onClose }) => {
                   onClick={handleCopy}
                   className="px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold text-sm hover:brightness-110 active:scale-95"
                 >
-                  {copied ? '✓ Copied!' : 'Copy'}
+                  {copied ? "✓ Copied!" : "Copy"}
                 </button>
               </div>
             </div>
 
             <p className="text-xs text-white/60 text-center">
-              Share this link on social media to invite your friends!
+              Share this link to invite friends and earn rewards!
             </p>
           </div>
         )}
       </div>
     </dialog>
-  )
-}
+  );
+};
 
-export default ReferralModal
+export default ReferralModal;
