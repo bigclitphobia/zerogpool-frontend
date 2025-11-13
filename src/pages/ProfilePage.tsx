@@ -29,7 +29,7 @@ const ProfilePage = () => {
   const { authenticated, user, logout } = usePrivy()
   const { wallets } = useWallets()
   const [name, setName] = useState('')
-  const [saving, setSaving] = useState(false)
+  const [setSaving] = useState(false) //remove saving
   const [stats, setStats] = useState<any | null>(null)
   const [loadingStats, setLoadingStats] = useState(false)
 
@@ -81,15 +81,15 @@ const ProfilePage = () => {
     }
   }
 
-  async function save() {
-    if (!name.trim()) return
-    setSaving(true)
-    try {
-      await updatePlayerName(name.trim())
-    } finally {
-      setSaving(false)
-    }
-  }
+  // async function save() {
+  //   if (!name.trim()) return
+  //   setSaving(true)
+  //   try {
+  //     await updatePlayerName(name.trim())
+  //   } finally {
+  //     setSaving(false)
+  //   }
+  // }
 
   const gamesPlayed = (stats?.totalGamesPlayedVsCPU || 0) + (stats?.totalGamesPlayedVsHuman || 0)
   const gamesWon = (stats?.totalGamesWonVsCPU || 0) + (stats?.totalGamesWonVsHuman || 0)
