@@ -95,15 +95,19 @@ export async function getLeaderboard(): Promise<LeaderboardRow[]> {
 }
 
 // Referral system
-export const generateReferralCode = async (walletAddress: string, signature: string) => {
-  const res = await fetch(`/api/referral/generate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ walletAddress, signature })
+export const generateReferralCode = async (
+  walletAddress: string,
+  signature: string,
+  nonce: number
+) => {
+  const res = await fetch("/api/referral/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ walletAddress, signature, nonce }),
   });
+
   return res.json();
 };
-
 
 export const API = {
   API_BASE,
