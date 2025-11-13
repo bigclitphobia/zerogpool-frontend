@@ -5,7 +5,7 @@ import { usePrivy, useWallets } from '@privy-io/react-auth'
 import connectWalletImg from '../assets/connectWallet.png'
 import gameMannual from '../assets/gameMannual.png'
 import LoginModal from '../components/LoginModal'
-import ReferralModal from '../components/ReferralModal'
+// import ReferralModal from '../components/ReferralModal'
 import { getPlayerData, getToken } from '../lib/api'
 // header assets are handled in Layout; not needed here
 import rulesIcon from '../assets/rulesIcon.png';
@@ -109,14 +109,14 @@ export default function HomePage() {
         </div>
         <div>
 
-        <button 
+        {/* <button 
             onClick={() => setShowReferral(true)}
             style={{borderRadius:'100px'}}
             className="absolute left-[12px] bottom-[12px] rounded-2xl ring-1 ring-white/30 bg-black/30 px-4 py-1 hover:bg-black/40 text-white/95 text-sm font-semibold tracking-wide flex items-center gap-2"
           >
             <span className="text-lg">🎁</span>
             REFERRAL
-          </button>
+          </button> */}
           
 
           <Link to="/rules" className="absolute right-[12px] bottom-[12px] rounded-2xl ring-1 ring-white/30 bg-black/30 px-4 py-2 hover:bg-black/40 text-white/95 text-sm font-semibold tracking-wide flex items-center gap-2">
@@ -125,7 +125,7 @@ export default function HomePage() {
           </Link>
         </div>
         
-        <ReferralModal open={showReferral} onClose={() => setShowReferral(false)} />
+        {/* <ReferralModal open={showReferral} onClose={() => setShowReferral(false)} /> */}
       </div>
     )
   }
