@@ -4,7 +4,7 @@ import profileIcon from '../assets/profileIcon.png'
 import frameLg from '../assets/leaderboardFrame.png'
 import trophy from '../assets/trophy.png'
 import ball5 from '../assets/balls/ball-5.png'
-import { getPlayerData, updatePlayerName, getPlayerStats, getToken, setToken } from '../lib/api'
+import { getPlayerData,  getPlayerStats, getToken, setToken } from '../lib/api' //remove update player name
 
 function formatPlayTime(totalMinutes: number | undefined) {
   if (!totalMinutes || totalMinutes <= 0) return '—'
@@ -29,7 +29,7 @@ const ProfilePage = () => {
   const { authenticated, user, logout } = usePrivy()
   const { wallets } = useWallets()
   const [name, setName] = useState('')
-  const [setSaving] = useState(false) //remove saving
+  // const [setSaving] = useState(false) //remove saving
   const [stats, setStats] = useState<any | null>(null)
   const [loadingStats, setLoadingStats] = useState(false)
 
