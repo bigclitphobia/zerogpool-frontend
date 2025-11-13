@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import type React from 'react'
 import poolTableNFT from '../assets/tableNFT.png'
 import btnFrame from '../assets/btnFrame.png'
 // import ButtonFrame from '../assets/btnFrame.png';

@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import type React from 'react'
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import bg from '../assets/bg.png'
@@ -96,6 +97,7 @@ const Layout: React.FC = () => {
 
   return (
     <div className="relative flex flex-col min-h-dvh text-neutral-100">
+      {/* Network enforcement banner removed; gating happens on connect action */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-20 bg-center bg-no-repeat bg-cover " style={{ backgroundImage: `url(${bgImage})` }} />
 
       {!isHome ? (

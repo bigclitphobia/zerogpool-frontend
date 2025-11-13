@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type React from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { generateReferralCode } from '../lib/api'
 
@@ -8,7 +9,7 @@ type ReferralModalProps = {
 }
 
 const ReferralModal: React.FC<ReferralModalProps> = ({ open, onClose }) => {
-  const dialogRef = React.useRef<HTMLDialogElement | null>(null)
+  const dialogRef = useRef<HTMLDialogElement | null>(null)
   const { user } = usePrivy()
   const { wallets } = useWallets()
   const [referralCode, setReferralCode] = useState<string | null>(null)
@@ -21,7 +22,7 @@ const ReferralModal: React.FC<ReferralModalProps> = ({ open, onClose }) => {
     (user as any)?.embeddedWallets?.[0]?.address ||
     wallets.find((w) => !!w.address)?.address
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (open && dialogRef.current && !dialogRef.current.open) {
       dialogRef.current.showModal()
     }
@@ -35,7 +36,7 @@ const ReferralModal: React.FC<ReferralModalProps> = ({ open, onClose }) => {
     }
   }, [open])
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open) {
       setReferralCode(null)
       setError(null)
