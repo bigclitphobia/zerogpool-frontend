@@ -29,12 +29,18 @@ const ReferralModal: React.FC<ReferralModalProps> = ({ open, onClose }) => {
   // PRIVY SIGNING HANDLER
   // -------------------------------
   const signWithPrivy = async (wallet: any, message: string) => {
-    // Embedded wallet (Privy-managed key)
-    if (wallet.walletClientType === "privy") {
+  try {
+    // 1) Embedded Privy Wallet
+    if (wallet.walletClientType === "privy" && wallet.signMessage) {
       return await wallet.signMessage(message);
     }
 
-    // External wallet (Zerion, MetaMask, Coinbase, Rainbow)
+    // 2) External wallets (Zerion, Metamask, Coinbase, Rainbow etc)
+    if (wallet.ethPersonalSign) {
+      return await wallet.ethPersonalSign(message);
+    }
+
+    // 3) Provider fallback (for legacy)
     if (wallet.provider?.request) {
       return await wallet.provider.request({
         method: "personal_sign",
@@ -43,7 +49,12 @@ const ReferralModal: React.FC<ReferralModalProps> = ({ open, onClose }) => {
     }
 
     throw new Error("Unable to sign message with this wallet.");
-  };
+  } catch (err) {
+    console.error("Sign error:", err);
+    throw new Error("Wallet signature failed.");
+  }
+};
+
 
   // -------------------------------
   // OPEN / CLOSE MODAL
