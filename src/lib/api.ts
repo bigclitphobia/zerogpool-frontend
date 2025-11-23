@@ -95,11 +95,20 @@ export async function getLeaderboard(): Promise<LeaderboardRow[]> {
 }
 
 // Referral system
-export async function generateReferralCode(walletAddress: string): Promise<{ referralCode: string }> {
-  const body = JSON.stringify({ walletAddress })
-  const data: any = await request('/referral/generate', { method: 'POST', body, auth: true })
-  return data?.data
-}
+export const generateReferralCode = async (
+  walletAddress: string,
+  signature: string,
+  nonce: number
+) => {
+  const res = await fetch("https://zerogpoolgame.onrender.com/api/referral/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ walletAddress, signature, nonce }),
+  });
+
+  return res.json();
+};
+
 
 export const API = {
   API_BASE,
