@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
+import { useNavigate } from 'react-router-dom'
 import profileIcon from '../assets/profileIcon.png'
 import frameLg from '../assets/leaderboardFrame.png'
 import trophy from '../assets/trophy.png'
 import ball5 from '../assets/balls/ball-5.png'
-import { getPlayerData,  getPlayerStats, getToken, setToken } from '../lib/api' //remove update player name
+import { getPlayerData, getPlayerStats, getToken, setToken, getWalletAddress } from '../lib/api' //remove update player name
 
 function formatPlayTime(totalMinutes: number | undefined) {
   if (!totalMinutes || totalMinutes <= 0) return '—'
@@ -28,22 +29,26 @@ const Row = ({ icon, label, value }: { icon: React.ReactNode; label: string; val
 const ProfilePage = () => {
   const { authenticated, user, logout } = usePrivy()
   const { wallets } = useWallets()
+  const navigate = useNavigate()
   const [name, setName] = useState('')
   // const [setSaving] = useState(false) //remove saving
   const [stats, setStats] = useState<any | null>(null)
   const [loadingStats, setLoadingStats] = useState(false)
+  const token = getToken()
+  const isAuthenticated = authenticated || Boolean(token)
 
   const address = useMemo(
     () =>
       (user as any)?.wallet?.address ||
       (user as any)?.embeddedWallets?.[0]?.address ||
       wallets.find((w) => !!w.address)?.address ||
+      getWalletAddress() ||
       '',
     [user, wallets]
   )
 
   useEffect(() => {
-    if (!authenticated || !getToken()) return
+    if (!isAuthenticated || !getToken()) return
     let active = true
     getPlayerData()
       .then((data) => {
@@ -55,16 +60,16 @@ const ProfilePage = () => {
     return () => {
       active = false
     }
-  }, [authenticated])
+  }, [isAuthenticated])
 
   useEffect(() => {
-    if (!authenticated || !getToken()) return
+    if (!isAuthenticated || !getToken()) return
     setLoadingStats(true)
     getPlayerStats()
       .then((data) => setStats(data || {}))
       .catch(() => setStats({}))
       .finally(() => setLoadingStats(false))
-  }, [authenticated])
+  }, [isAuthenticated])
 
   const short = useMemo(() => (address ? `${address.slice(0, 6)}…${address.slice(-4)}` : ''), [address])
 
@@ -117,7 +122,7 @@ const ProfilePage = () => {
 
   async function handleLogout() {
     try {
-      await logout()
+      if (authenticated) await logout()
     } finally {
       // Clear backend JWT and any local wallet connection flag
       setToken(null)
@@ -125,6 +130,8 @@ const ProfilePage = () => {
         localStorage.removeItem("walletAddress")
         localStorage.removeItem('wallet_connected')
       } catch {}
+      navigate('/', { replace: true })
+      window.location.reload()
     }
   }
 

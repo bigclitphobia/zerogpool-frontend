@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import LiveLeaderboard from '../components/LiveLeaderboard'
 import PlayerStatsPanel from '../components/PlayerStatsPanel'
+import { getToken, getWalletAddress } from '../lib/api'
 
 const GamePage = () => {
   const navigate = useNavigate()
@@ -11,14 +12,14 @@ const GamePage = () => {
   const UNITY_GAME_BASE_URL = import.meta.env.VITE_UNITY_GAME_URL || 'https://pub-c57fda34f99145fc8d97b0a6b6faa237.r2.dev/index.html'
 
   useEffect(() => {
-    // Get wallet address from localStorage
-    const wallet = localStorage.getItem('walletAddress')
-    const isConnected = localStorage.getItem('wallet_connected') === 'true'
+    const wallet = getWalletAddress()
+    const token = getToken()
+    const isConnected = Boolean(token) || localStorage.getItem('wallet_connected') === 'true'
     
     // Debug logs
     console.log('🔍 Checking wallet connection...')
     console.log('Wallet:', wallet)
-    console.log('Connected:', isConnected)
+    console.log('Connected:', isConnected, 'Token:', Boolean(token))
     
     if (!wallet || !isConnected) {
       console.warn('⚠️ No wallet connected, redirecting to home...')
