@@ -20,6 +20,14 @@ export function setToken(token: string | null) {
   }
 }
 
+export function getWalletAddress(): string | null {
+  try {
+    return localStorage.getItem(WALLET_KEY)
+  } catch {
+    return null
+  }
+}
+
 export function setWalletAddress(wallet: string | null) {
   try {
     if (!wallet) localStorage.removeItem(WALLET_KEY)
@@ -114,6 +122,7 @@ export const API = {
   API_BASE,
   getToken,
   setToken,
+  getWalletAddress,
   request,
   loginWithWallet,
   getPlayerData,

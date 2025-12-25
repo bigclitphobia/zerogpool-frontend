@@ -7,10 +7,31 @@ import bgBlur from '../assets/bgBlur.png'
 import backImg from '../assets/back.png'
 import ogImg from '../assets/OG.png'
 import LoginModal from './LoginModal'
+import NetworkModal from './NetworkModal'
 import profileIcon from '../assets/profileIcon.png'
 import ball1 from '../assets/balls/ball-1.png'
 import trophyIcon from '../assets/trophy.png'
-import { getPlayerData, getPlayerStats, getToken } from '../lib/api'
+import { getAllowedChainFromEnv } from '../lib/chain'
+import { getGateWalletCurrentNetwork } from '../lib/gateWallet'
+import { getPlayerData, getPlayerStats, getToken, getWalletAddress } from '../lib/api'
+
+const DEFAULT_ALLOWED_CHAIN = {
+  caip2: 'eip155:16661',
+  decimalChainId: 16661,
+  hexChainId: '0x4115',
+  chainName: '0G Mainnet',
+  rpcUrls: ['https://evmrpc.0g.ai'],
+  blockExplorerUrls: ['https://chainscan.0g.ai'],
+}
+
+const normalizeChainId = (chainId?: string) => {
+  if (!chainId) return undefined
+  if (chainId.startsWith('0x')) {
+    const parsed = Number.parseInt(chainId, 16)
+    return Number.isFinite(parsed) ? String(parsed) : chainId
+  }
+  return chainId
+}
 
 const Layout: React.FC = () => {
   const { authenticated, user } = usePrivy()
@@ -21,17 +42,24 @@ const Layout: React.FC = () => {
   const isHome = location.pathname === '/'
   // Home page uses the same background for connected/not connected
   // Other pages keep blurred bg when not authenticated
-  const bgImage = isHome ? bg : (authenticated ? bg : bgBlur)
+  const token = getToken()
+  const isAuthenticated = authenticated || Boolean(token)
+  const bgImage = isHome ? bg : (isAuthenticated ? bg : bgBlur)
 
+  const storedAddress = getWalletAddress() || ''
   const connectedAddress =
     (user as any)?.wallet?.address ||
     (user as any)?.embeddedWallets?.[0]?.address ||
-    wallets.find((w) => !!(w as any).address)?.address
+    wallets.find((w) => !!(w as any).address)?.address ||
+    storedAddress
   const needsWallet = !!(authenticated && !connectedAddress)
   const shortAddress = useMemo(() => {
     const a = connectedAddress || ''
     return a ? `${a.slice(0, 6)}…${a.slice(-4)}` : ''
   }, [connectedAddress])
+
+  const [networkOpen, setNetworkOpen] = useState(false)
+  const allowedChain = useMemo(() => getAllowedChainFromEnv() || DEFAULT_ALLOWED_CHAIN, [])
 
   // Header dynamic values
   const [wins, setWins] = useState<number | null>(null)
@@ -45,7 +73,7 @@ const Layout: React.FC = () => {
 
   // Fetch profile + stats once authenticated and JWT available
   useEffect(() => {
-    if (!authenticated) {
+    if (!isAuthenticated) {
       setWins(null)
       setCoins(null)
       setPlayerName(null)
@@ -84,7 +112,53 @@ const Layout: React.FC = () => {
     return () => {
       active = false
     }
-  }, [authenticated])
+  }, [isAuthenticated])
+
+  useEffect(() => {
+    let active = true
+    const runCheck = async () => {
+      if (!isAuthenticated) {
+        setNetworkOpen(false)
+        return
+      }
+      const allowed = String(allowedChain.decimalChainId)
+      const eth = (window as any).ethereum
+      if (eth?.request) {
+        const chainId = await eth.request({ method: 'eth_chainId' }).catch(() => undefined)
+        const normalized = normalizeChainId(chainId)
+        if (!active) return
+        setNetworkOpen(Boolean(normalized && normalized !== allowed))
+        return
+      }
+      const gateNetwork = await getGateWalletCurrentNetwork().catch(() => undefined)
+      if (!active) return
+      if (gateNetwork === undefined) {
+        setNetworkOpen(false)
+        return
+      }
+      if (gateNetwork === null) {
+        setNetworkOpen(true)
+        return
+      }
+      const normalized = normalizeChainId(gateNetwork.chainId)
+      setNetworkOpen(Boolean(!normalized || normalized !== allowed))
+    }
+
+    runCheck()
+    const eth = (window as any).ethereum
+    const handleChainChanged = (chainId: string) => {
+      const normalized = normalizeChainId(chainId)
+      const allowed = String(allowedChain.decimalChainId)
+      setNetworkOpen(Boolean(normalized && normalized !== allowed))
+    }
+    if (eth?.on) {
+      eth.on('chainChanged', handleChainChanged)
+    }
+    return () => {
+      active = false
+      if (eth?.removeListener) eth.removeListener('chainChanged', handleChainChanged)
+    }
+  }, [isAuthenticated, allowedChain.decimalChainId])
 
   function handleBack() {
     const idx = (window.history.state && (window.history.state as any).idx) ?? 0
@@ -117,7 +191,7 @@ const Layout: React.FC = () => {
           )}
 
       <header className="relative pt-4">
-        {authenticated ? (
+        {isAuthenticated ? (
           <div className="relative w-full px-0">
             <div className="w-full pt-1 flex items-center justify-between px-4 sm:px-6 md:px-8">
               <div className="flex items-center gap-3">
@@ -175,6 +249,11 @@ const Layout: React.FC = () => {
       </main>
 
       <LoginModal open={showLogin || needsWallet} onClose={() => setShowLogin(false)} />
+      <NetworkModal
+        open={networkOpen}
+        onClose={() => setNetworkOpen(false)}
+        onSwitched={() => setNetworkOpen(false)}
+      />
     </div>
   )
 }

@@ -13,7 +13,13 @@ export const privyConfig: PrivyClientConfig = {
     walletList: [
       'metamask',
       'coinbase_wallet',
+      'rainbow',
+      'phantom',
+      'zerion',
+      'cryptocom',
+      'uniswap',
       'okx_wallet',
+      'universal_profile',
     ],
   },
   embeddedWallets: {

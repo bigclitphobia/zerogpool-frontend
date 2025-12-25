@@ -14,6 +14,7 @@ import kultGameLogo from '../assets/kultLogo.png'
 import MyLogo from '../assets/logo.png'
 import NetworkModal from './NetworkModal'
 import { getAllowedChainFromEnv } from '../lib/chain'
+import GateWalletConnectButton from './GateWalletConnectButton'
 
 /* ============================== Helpers ============================== */
 function getPrimaryWalletAddress(user: any | undefined | null): string | undefined {
@@ -236,7 +237,7 @@ function CodeForm({
   )
 }
 
-type WalletId = 'metamask' | 'coinbase_wallet' | 'okx_wallet'
+type WalletId = 'metamask' | 'coinbase_wallet' | 'okx_wallet' | 'zerion'
 
 function WalletRow({
   label,
@@ -285,6 +286,7 @@ function WalletPickerScrollable({
           <WalletRow label="MetaMask" hint="Browser Extension" onClick={() => connectWith('metamask')} />
           <WalletRow label="Coinbase Wallet" hint="App / Extension" onClick={() => connectWith('coinbase_wallet')} />
           <WalletRow label="OKX" hint="App / Extension" onClick={() => connectWith('okx_wallet')} />
+          <WalletRow label="Zerion" hint="App / Extension" onClick={() => connectWith('zerion')} />
         </div>
       </div>
 
@@ -356,6 +358,7 @@ function CreateWalletPanel({
           <WalletRow label="MetaMask" />
           <WalletRow label="Coinbase Wallet" />
           <WalletRow label="OKX" />
+          <WalletRow label="Zerion" />
         </div>
         <GoogleButton onClick={() => {}} disabled />
       </div>
@@ -481,6 +484,8 @@ export default function LoginModal({
       setError(err?.message || 'Failed to connect wallet')
     }
   }
+
+  
 
   /* ————— Effects ————— */
   // Reset on open
@@ -631,6 +636,17 @@ export default function LoginModal({
 
                     <DividerOr />
 
+                    <GateWalletConnectButton
+                      disabled={emailStep === 'enter-code'}
+                      onError={(message) => setError(message)}
+                      onNetworkMismatch={() => setNetworkOpen(true)}
+                      onConnected={() => {
+                        setError('')
+                        setWalletMode(false)
+                        onClose?.()
+                      }}
+                    />
+
                     {/* CONNECT WALLET triggers Privy wallet login to create an authenticated session */}
                     <button
                       className="w-full inline-flex items-center justify-center rounded-2xl border border-emerald-400/50 bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-500 px-4 py-3 text-lg font-bold text-white shadow-[0_10px_28px_rgba(16,185,129,0.35)] hover:shadow-[0_14px_34px_rgba(16,185,129,0.45)] active:scale-[.99] transition disabled:opacity-60"
@@ -678,7 +694,6 @@ export default function LoginModal({
         open={networkOpen}
         onClose={() => setNetworkOpen(false)}
         onSwitched={() => {
-          // After successful switch, user can click Connect Wallet again
           setNetworkOpen(false)
         }}
       />
@@ -717,6 +732,7 @@ declare global {
 //     <path d="M17.25 5.25H6a2.25 2.25 0 0 0-2.25 2.25v1.5" stroke="currentColor" strokeWidth="1.6"/>
 //   </svg>
 // )
+
 
 // const GoogleIcon = ({ size = 18 }: { size?: number }) => (
 //   <svg width={size} height={size} viewBox="0 0 24 24">

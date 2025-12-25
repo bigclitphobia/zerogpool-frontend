@@ -6,7 +6,7 @@ import connectWalletImg from '../assets/connectWallet.png'
 import gameMannual from '../assets/gameMannual.png'
 import LoginModal from '../components/LoginModal'
 import ReferralModal from '../components/ReferralModal'
-import { getPlayerData, getToken } from '../lib/api'
+import { getPlayerData, getToken, getWalletAddress } from '../lib/api'
 // header assets are handled in Layout; not needed here
 import rulesIcon from '../assets/rulesIcon.png';
 import leaderboardBtnIcon from '../assets/leaderboard.png';
@@ -21,10 +21,13 @@ export default function HomePage() {
   const [showReferral, setShowReferral] = useState(false)
   const [playerName, setPlayerName] = useState<string | null>(null)
   const navigate = useNavigate()
+  const token = getToken()
+  const isAuthenticated = authenticated || Boolean(token)
   const connectedAddress =
     (user as any)?.wallet?.address ||
     (user as any)?.embeddedWallets?.[0]?.address ||
-    wallets.find((w) => !!w.address)?.address
+    wallets.find((w) => !!w.address)?.address ||
+    getWalletAddress()
 
   useEffect(() => {
     if (!authenticated || !user) return
@@ -36,7 +39,7 @@ export default function HomePage() {
 
   // Fetch player name once we have JWT from backend login
   useEffect(() => {
-    if (!authenticated) return
+    if (!isAuthenticated) return
     let active = true
     let attempts = 0
     const fetchName = () => {
@@ -59,7 +62,7 @@ export default function HomePage() {
     }
     fetchName()
     return () => { active = false }
-  }, [authenticated])
+  }, [isAuthenticated])
 
   console.log("connected Address is ",connectedAddress," player Name is ",playerName)
   // When authenticated, show post-login UI
@@ -88,7 +91,7 @@ export default function HomePage() {
     }
   }
 
-  if (authenticated) {
+  if (isAuthenticated) {
     return (
       <div className="relative w-full h-full flex-1">
         <div className="relative w-full h-full flex flex-col items-center">
