@@ -1,12 +1,12 @@
 // src/pages/HomePage.tsx
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import connectWalletImg from '../assets/connectWallet.png'
 import gameMannual from '../assets/gameMannual.png'
 import LoginModal from '../components/LoginModal'
 import ReferralModal from '../components/ReferralModal'
-import { getPlayerData, getToken, getWalletAddress } from '../lib/api'
+import { getPlayerData, getToken, getWalletAddress, loginWithIframeLogin } from '../lib/api'
 // header assets are handled in Layout; not needed here
 import rulesIcon from '../assets/rulesIcon.png';
 import leaderboardBtnIcon from '../assets/leaderboard.png';
@@ -17,12 +17,21 @@ import centerLogo from '../assets/logo.png';
 export default function HomePage() {
   const { authenticated, user } = usePrivy() // removed logout
   const { wallets } = useWallets()
+  const token = getToken()
+  const iframeParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+  const iframeSource = iframeParams?.get('source')
+  const iframeJwt = iframeParams?.get('jwt')
+  const normalizedIframeSource = iframeSource?.toLowerCase()
+  const shouldAttemptIframeLogin =
+    !token && !!iframeJwt && normalizedIframeSource === 'browser'
   const [showLogin, setShowLogin] = useState(false)
   const [showReferral, setShowReferral] = useState(false)
   const [playerName, setPlayerName] = useState<string | null>(null)
+  const [iframeLoginDone, setIframeLoginDone] = useState(!shouldAttemptIframeLogin)
+  const [iframeLoginChecking, setIframeLoginChecking] = useState(shouldAttemptIframeLogin)
+  const iframeLoginAttempted = useRef(false)
   const navigate = useNavigate()
-  const token = getToken()
-  const isAuthenticated = authenticated || Boolean(token)
+  let isAuthenticated = authenticated || Boolean(token)
   const connectedAddress =
     (user as any)?.wallet?.address ||
     (user as any)?.embeddedWallets?.[0]?.address ||
@@ -36,6 +45,30 @@ export default function HomePage() {
     console.log('Wallets:', wallets)
     console.groupEnd()
   }, [authenticated, user, wallets])
+
+  useEffect(() => {
+    if (!shouldAttemptIframeLogin || !iframeJwt || !iframeSource) {
+      setIframeLoginDone(true)
+      setIframeLoginChecking(false)
+      return
+    }
+    if (iframeLoginAttempted.current) return
+    iframeLoginAttempted.current = true
+    let active = true
+    setIframeLoginChecking(true)
+    loginWithIframeLogin(iframeJwt, iframeSource)
+      .catch((err) => {
+        console.warn('Iframe login failed:', err)
+      })
+      .finally(() => {
+        if (!active) return
+        setIframeLoginChecking(false)
+        setIframeLoginDone(true)
+      })
+    return () => {
+      active = false
+    }
+  }, [shouldAttemptIframeLogin, iframeJwt, iframeSource])
 
   // Fetch player name once we have JWT from backend login
   useEffect(() => {
@@ -66,6 +99,17 @@ export default function HomePage() {
 
   console.log("connected Address is ",connectedAddress," player Name is ",playerName)
   // When authenticated, show post-login UI
+
+  if (!isAuthenticated && !iframeLoginDone) {
+    return (
+      <div className="relative w-full h-full flex flex-col items-center">
+        <div className="flex-1 w-full flex items-center justify-center py-8">
+          <img src={centerLogo} alt="Zero G Pool" className="max-h-[46vh] w-auto drop-shadow-[0_10px_30px_rgba(0,0,0,0.45)]" />
+        </div>
+        <div className="pb-6 text-white/80 text-sm">{iframeLoginChecking ? 'Checking access...' : ''}</div>
+      </div>
+    )
+  }
 
   async function startSession() {
     // Wait briefly for JWT from backend login via WalletContext
