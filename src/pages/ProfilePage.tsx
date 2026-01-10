@@ -148,6 +148,8 @@ const ProfilePage = () => {
   const gamesPlayed = (stats?.totalGamesPlayedVsCPU || 0) + (stats?.totalGamesPlayedVsHuman || 0)
   const gamesWon = (stats?.totalGamesWonVsCPU || 0) + (stats?.totalGamesWonVsHuman || 0)
   const ballsPocketed = stats?.totalBallsPocketed || 0
+  const source = localStorage.getItem('source');
+
 
   return (
     <div className="w-full h-full flex items-start justify-center px-4 sm:px-6 md:px-8">
@@ -171,9 +173,9 @@ const ProfilePage = () => {
                     )}
                   </div>
                 </div>
-                <button onClick={handleLogout} className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 px-4 py-2 text-sm font-semibold text-white">
+                { source !== 'browser' && <button onClick={handleLogout} className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 px-4 py-2 text-sm font-semibold text-white">
                   Logout
-                </button>
+                </button>}
               </div>
 
               {/* Stats list */}
@@ -202,9 +204,9 @@ const ProfilePage = () => {
                 )}
               </div>
             </div>
-            <button onClick={handleLogout} className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 px-3 py-2 text-sm font-semibold text-white">
+            { source !== 'browser' && <button onClick={handleLogout} className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 px-3 py-2 text-sm font-semibold text-white">
               Logout
-            </button>
+            </button>}
           </div>
           {/* <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
             <label className="block text-sm text-white/80 mb-2">Update Username</label>

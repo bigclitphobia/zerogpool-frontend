@@ -71,8 +71,8 @@ export async function loginWithWallet(walletAddress: string): Promise<{ token: s
 
 // Auth
 export async function loginWithIframeLogin(jwttoken: string, source: string): Promise<{ token: string } | null> {
-  const body = JSON.stringify({ source })
-  const data: any = await request('/auth/iframe-login', { method: 'POST', body, headers: { 'Authorization': `Bearer ${jwttoken}` } })
+  const body = JSON.stringify({ source, token: jwttoken })
+  const data: any = await request('/auth/login', { method: 'POST', body });
   const token = data?.data?.token
   const _walletAddress = data?.data?.walletAddress;
   console.log("my data is",data);
