@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { loginWithWallet } from '../lib/api'
+import { useBlockchainToast } from '../context/BlockchainToastContext'
 import {
   connectGateWallet,
   getGateWalletCurrentNetwork,
@@ -46,6 +47,7 @@ export default function GateWalletConnectButton({
   disabled,
 }: Props) {
   const [connecting, setConnecting] = useState(false)
+  const { showToast } = useBlockchainToast()
 
   const handleConnect = async () => {
     if (disabled || connecting) return
@@ -75,7 +77,18 @@ export default function GateWalletConnectButton({
           `Gate Wallet is on ${getNetworkLabel(network)}. Switch to ${allowedChain.chainName}.`
         )
       }
-      await loginWithWallet(address)
+      
+      const loginResult = await loginWithWallet(address)
+      
+      if (loginResult?.blockchain?.txHash) {
+        showToast({
+          title: '🎮 Login Successful',
+          description: 'Session recorded on 0G blockchain',
+          txHash: loginResult.blockchain.txHash,
+          duration: 6000
+        })
+      }
+      
       onConnected?.(address)
     } catch (err: any) {
       onError?.(err?.message || 'Failed to connect Gate Wallet.')
