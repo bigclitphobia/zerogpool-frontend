@@ -1,25 +1,26 @@
-// src/pages/HomePage.tsx
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
+import { useBlockchainToast } from '../context/BlockchainToastContext' // NEW
+import { loginWithWallet } from '../lib/api' // NEW
 import connectWalletImg from '../assets/connectWallet.png'
 import gameMannual from '../assets/gameMannual.png'
 import LoginModal from '../components/LoginModal'
 import ReferralModal from '../components/ReferralModal'
 import { getPlayerData, getToken, getWalletAddress } from '../lib/api'
-// header assets are handled in Layout; not needed here
 import rulesIcon from '../assets/rulesIcon.png';
 import leaderboardBtnIcon from '../assets/leaderboard.png';
 import startSeesionBtnIcon from '../assets/startSession.png';
-// import logoutImage from '../assets/LogoutIcon.png';
 import centerLogo from '../assets/logo.png';
 
 export default function HomePage() {
-  const { authenticated, user } = usePrivy() // removed logout
+  const { authenticated, user } = usePrivy()
   const { wallets } = useWallets()
+  const { showToast } = useBlockchainToast() // NEW
   const [showLogin, setShowLogin] = useState(false)
   const [showReferral, setShowReferral] = useState(false)
   const [playerName, setPlayerName] = useState<string | null>(null)
+  const [hasShownLoginToast, setHasShownLoginToast] = useState(false) // NEW
   const navigate = useNavigate()
   const token = getToken()
   const isAuthenticated = authenticated || Boolean(token)
@@ -36,6 +37,31 @@ export default function HomePage() {
     console.log('Wallets:', wallets)
     console.groupEnd()
   }, [authenticated, user, wallets])
+
+  // NEW: Handle Privy wallet login and show toast
+  useEffect(() => {
+    if (!authenticated || !connectedAddress || hasShownLoginToast) return
+    
+    const handlePrivyLogin = async () => {
+      try {
+        const loginResult = await loginWithWallet(connectedAddress)
+        
+        if (loginResult?.blockchain?.txHash) {
+          showToast({
+            title: '🎮 Login Successful',
+            description: 'Session recorded on 0G blockchain',
+            txHash: loginResult.blockchain.txHash,
+            duration: 6000
+          })
+          setHasShownLoginToast(true)
+        }
+      } catch (error) {
+        console.error('Failed to show login toast:', error)
+      }
+    }
+    
+    handlePrivyLogin()
+  }, [authenticated, connectedAddress, hasShownLoginToast, showToast])
 
   // Fetch player name once we have JWT from backend login
   useEffect(() => {
@@ -65,10 +91,8 @@ export default function HomePage() {
   }, [isAuthenticated])
 
   console.log("connected Address is ",connectedAddress," player Name is ",playerName)
-  // When authenticated, show post-login UI
 
   async function startSession() {
-    // Wait briefly for JWT from backend login via WalletContext
     let token = getToken()
     let attempts = 0
     while (!token && attempts < 6) {
@@ -77,7 +101,6 @@ export default function HomePage() {
       attempts += 1
     }
     if (!token) {
-      // Fallback to NFT page; it will handle redirect if name already exists
       navigate('/nft1')
       return
     }
@@ -86,7 +109,6 @@ export default function HomePage() {
       const hasName = !!(data && (data as any).playerNames0 && String((data as any).playerNames0).trim())
       navigate(hasName ? '/game' : '/nft1')
     } catch {
-      // On error, send to NFT gate where it can proceed once name is saved
       navigate('/nft1')
     }
   }
@@ -111,8 +133,7 @@ export default function HomePage() {
 
         </div>
         <div>
-
-        <button 
+          <button 
             onClick={() => setShowReferral(true)}
             style={{borderRadius:'100px'}}
             className="absolute left-[12px] bottom-[12px] rounded-2xl ring-1 ring-white/30 bg-black/30 px-4 py-1 hover:bg-black/40 text-white/95 text-sm font-semibold tracking-wide flex items-center gap-2"
@@ -121,7 +142,6 @@ export default function HomePage() {
             REFERRAL
           </button>
           
-
           <Link to="/rules" className="absolute right-[12px] bottom-[12px] rounded-2xl ring-1 ring-white/30 bg-black/30 px-4 py-2 hover:bg-black/40 text-white/95 text-sm font-semibold tracking-wide flex items-center gap-2">
             <img src={rulesIcon} alt="Rules" className="h-4 w-4" />
             RULES
@@ -133,14 +153,12 @@ export default function HomePage() {
     )
   }
 
-  // Before login UI: show center logo and CTAs
   return (
     <div className="relative w-full h-full flex flex-col items-center">
       <div className="flex-1 w-full flex items-center justify-center py-8">
         <img src={centerLogo} alt="Zero G Pool" className="max-h-[46vh] w-auto drop-shadow-[0_10px_30px_rgba(0,0,0,0.45)]" />
       </div>
 
-      {/* Connect + Game Manual below the logo (same size as main CTAs) */}
       <div className="mt-6 flex flex-col md:flex-row items-center justify-center gap-4 sm:gap-8">
         <button onClick={() => setShowLogin(true)} aria-label="Connect Wallet" className="group">
           <img

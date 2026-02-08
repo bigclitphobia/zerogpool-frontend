@@ -3,6 +3,7 @@
 const API_BASE = (import.meta as any).env?.VITE_BACKEND_URL || 'http://localhost:3000/api'
 const TOKEN_KEY = 'jwt_token'
 const WALLET_KEY = "walletAddress"
+
 export function getToken(): string | null {
   try {
     return localStorage.getItem(TOKEN_KEY)
@@ -37,7 +38,6 @@ export function setWalletAddress(wallet: string | null) {
   }
 }
 
-
 type RequestOptions = RequestInit & { auth?: boolean }
 
 async function request<T = any>(path: string, opts: RequestOptions = {}): Promise<T> {
@@ -57,16 +57,30 @@ async function request<T = any>(path: string, opts: RequestOptions = {}): Promis
   return data
 }
 
-// Auth
-export async function loginWithWallet(walletAddress: string): Promise<{ token: string } | null> {
+// Auth - NOW RETURNS BLOCKCHAIN DATA
+export async function loginWithWallet(walletAddress: string): Promise<{ 
+  token: string;
+  blockchain?: {
+    success: boolean;
+    txHash?: string;
+    blockNumber?: number;
+    gasUsed?: string;
+    onChainLoginCount?: number;
+  }
+} | null> {
   const body = JSON.stringify({ walletAddress })
   const data: any = await request('/auth/login', { method: 'POST', body })
   const token = data?.data?.token
-  const _walletAddress = data?.data?.walletAddress;
-  console.log("my data is",data);
-  if(_walletAddress) setWalletAddress(_walletAddress);
+  const _walletAddress = data?.data?.walletAddress
+  const blockchain = data?.blockchain
+  
+  console.log("Login response:", data)
+  console.log("Blockchain data:", blockchain)
+  
+  if (_walletAddress) setWalletAddress(_walletAddress)
   if (token) setToken(token)
-  return token ? { token } : null
+  
+  return token ? { token, blockchain } : null
 }
 
 // Player profile
@@ -116,7 +130,6 @@ export const generateReferralCode = async (
 
   return res.json();
 };
-
 
 export const API = {
   API_BASE,
