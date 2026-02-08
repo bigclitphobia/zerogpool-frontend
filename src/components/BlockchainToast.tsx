@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
+import type { CSSProperties } from 'react';
 import { X, ExternalLink, Zap, AlertCircle } from 'lucide-react';
 import './BlockchainToast.css';
 
@@ -12,7 +13,7 @@ interface ToastProps {
     duration: number;
   };
   onClose: () => void;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 }
 
 export default function BlockchainToast({ toast, onClose, style }: ToastProps) {
