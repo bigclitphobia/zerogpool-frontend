@@ -236,7 +236,32 @@ function CodeForm({
   )
 }
 
-type WalletId = 'metamask' | 'coinbase_wallet' | 'okx_wallet'
+type WalletId =
+  | 'metamask'
+  | 'coinbase_wallet'
+  | 'base_account'
+  | 'rainbow'
+  | 'phantom'
+  | 'zerion'
+  | 'cryptocom'
+  | 'uniswap'
+  | 'okx_wallet'
+  | 'bitget_wallet'
+  | 'universal_profile'
+
+const walletOptions: Array<{ id: WalletId; label: string; hint: string }> = [
+  { id: 'metamask', label: 'MetaMask', hint: 'Browser Extension' },
+  { id: 'coinbase_wallet', label: 'Coinbase Wallet', hint: 'App / Extension' },
+  { id: 'base_account', label: 'Base Account', hint: 'App / Embedded' },
+  { id: 'rainbow', label: 'Rainbow', hint: 'App / Extension' },
+  { id: 'phantom', label: 'Phantom', hint: 'App / Extension' },
+  { id: 'zerion', label: 'Zerion', hint: 'App / Extension' },
+  { id: 'cryptocom', label: 'Crypto.com', hint: 'App / Extension' },
+  { id: 'uniswap', label: 'Uniswap Wallet', hint: 'App / Extension' },
+  { id: 'okx_wallet', label: 'OKX Wallet', hint: 'App / Extension' },
+  { id: 'bitget_wallet', label: 'Bitget Wallet', hint: 'App / Extension' },
+  { id: 'universal_profile', label: 'Universal Profile', hint: 'Universal Profile' },
+]
 
 function WalletRow({
   label,
@@ -282,9 +307,14 @@ function WalletPickerScrollable({
           .wallet-scroll:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.35); }
         `}</style>
         <div className="wallet-scroll grid gap-2">
-          <WalletRow label="MetaMask" hint="Browser Extension" onClick={() => connectWith('metamask')} />
-          <WalletRow label="Coinbase Wallet" hint="App / Extension" onClick={() => connectWith('coinbase_wallet')} />
-          <WalletRow label="OKX" hint="App / Extension" onClick={() => connectWith('okx_wallet')} />
+          {walletOptions.map((wallet) => (
+            <WalletRow
+              key={wallet.id}
+              label={wallet.label}
+              hint={wallet.hint}
+              onClick={() => connectWith(wallet.id)}
+            />
+          ))}
         </div>
       </div>
 
@@ -353,9 +383,9 @@ function CreateWalletPanel({
       {/* Keep other paths disabled while creating wallet is required */}
       <div className="grid gap-2 opacity-60">
         <div className="grid gap-2">
-          <WalletRow label="MetaMask" />
-          <WalletRow label="Coinbase Wallet" />
-          <WalletRow label="OKX" />
+          {walletOptions.map((wallet) => (
+            <WalletRow key={wallet.id} label={wallet.label} hint={wallet.hint} />
+          ))}
         </div>
         <GoogleButton onClick={() => {}} disabled />
       </div>
@@ -475,12 +505,14 @@ export default function LoginModal({
     try {
       try { if (dialogRef.current?.open) dialogRef.current.close() } catch {}
       onClose?.()
-      await connectWallet({ walletList: [wallet] })
+      await connectWallet({ walletList: [wallet as any] })
     } catch (err: any) {
       console.error('connectWith error', err)
       setError(err?.message || 'Failed to connect wallet')
     }
   }
+
+  
 
   /* ————— Effects ————— */
   // Reset on open
@@ -562,117 +594,124 @@ export default function LoginModal({
     onClose?.()
   }
 
+  // Don’t render the dialog at all when closed so it can’t appear off‑center
+  // or sit on top of the Privy modal.
+  if (!open) return null
+
   return (
     <dialog
       ref={dialogRef}
       onCancel={requestClose}
-      className="fixed inset-0 z-50 m-auto w-[92vw] max-w-[500px] max-h-[92dvh] overflow-visible rounded-2xl border border-white/10 bg-[rgba(10,16,34,0.70)] shadow-[0_30px_80px_rgba(0,0,0,0.55)] p-0"
+      className="fixed inset-0 z-50 m-0 flex items-center justify-center bg-black/40 p-4 sm:p-6 w-full h-full"
     >
       <HeaderLogos leftLogoSrc={leftLogoSrc} rightLogoSrc={rightLogoSrc} />
 
-      <div className="relative p-6 pt-10 md:pt-10 text-[#EAF6FF] bg-gradient-to-b from-[rgba(10,16,34,0.75)] to-[rgba(8,16,34,0.45)]">
-        {(centerLogoSrc ?? logoSrc) && (
-          <img
-            src={centerLogoSrc ?? logoSrc}
-            alt="Center logo"
-            className="absolute left-1/2 -top-8 md:-top-10 -translate-x-1/2 z-20 w-26 md:w-34 rounded-xl border border-[#222] object-contain"
-          />
-        )}
+      <div className="relative w-full max-w-[500px] max-h-[92dvh] overflow-visible rounded-2xl border border-amber-400/60 bg-[rgba(24,16,8,0.94)] shadow-[0_30px_80px_rgba(0,0,0,0.70)]">
+        <div className="relative p-6 pt-10 md:pt-10 text-[#FFF7ED] bg-gradient-to-b from-[rgba(245,158,11,0.12)] via-[rgba(127,29,29,0.92)] to-[rgba(24,16,8,0.96)]">
+          {(centerLogoSrc ?? logoSrc) && (
+            <img
+              src={centerLogoSrc ?? logoSrc}
+              alt="Center logo"
+              style={{ height: '120px' }}
+              className="absolute left-1/2 -top-8 md:-top-10 -translate-x-1/2 z-20 w-26 md:w-34 rounded-xl object-contain"
+            />
+          )}
 
-        <button
-          type="button"
-          onClick={requestClose}
-          aria-label="Close"
-          className="absolute right-3 top-2 text-2xl leading-none text-slate-300 hover:text-white bg-transparent p-0"
-        >
-          ×
-        </button>
+          <button
+            type="button"
+            onClick={requestClose}
+            aria-label="Close"
+            className="absolute right-3 top-2 text-2xl leading-none text-slate-300 hover:text-white bg-transparent p-0"
+          >
+            ×
+          </button>
 
-        <TitleCard />
-        <ErrorBanner error={error} />
-        <EmbeddedWalletBadge address={authenticated ? existingAddress : undefined} />
+          <TitleCard />
+          <ErrorBanner error={error} />
+          <EmbeddedWalletBadge address={authenticated ? existingAddress : undefined} />
 
-        {showCustomCreateUI ? (
-          <CreateWalletPanel
-            variant={loginMethod === 'oauth' ? 'oauth' : 'email'}
-            creating={creating}
-            onCreate={handleCreateEmbeddedWallet}
-          />
-        ) : (
-          <div className="grid gap-4">
-            {!authenticated && (
-              <>
-                {!walletMode ? (
-                  <>
-                    {emailStep === 'enter-email' ? (
-                      <EmailForm
-                        email={email}
-                        setEmail={setEmail}
-                        emailState={emailState}
-                        onEmailSubmit={onEmailSubmit}
-                        setLoginMethod={setLoginMethod}
-                        disabled={false}
-                      />
-                    ) : (
-                      <CodeForm
-                        code={code}
-                        setCode={setCode}
-                        onBack={() => {
-                          setError('')
-                          setCode('')
-                          setEmail('')
-                          setLoginMethod(null)
-                          setEmailStep('enter-email')
+          {showCustomCreateUI ? (
+            <CreateWalletPanel
+              variant={loginMethod === 'oauth' ? 'oauth' : 'email'}
+              creating={creating}
+              onCreate={handleCreateEmbeddedWallet}
+            />
+          ) : (
+            <div className="grid gap-4">
+              {!authenticated && (
+                <>
+                  {!walletMode ? (
+                    <>
+                      {emailStep === 'enter-email' ? (
+                        <EmailForm
+                          email={email}
+                          setEmail={setEmail}
+                          emailState={emailState}
+                          onEmailSubmit={onEmailSubmit}
+                          setLoginMethod={setLoginMethod}
+                          disabled={false}
+                        />
+                      ) : (
+                        <CodeForm
+                          code={code}
+                          setCode={setCode}
+                          onBack={() => {
+                            setError('')
+                            setCode('')
+                            setEmail('')
+                            setLoginMethod(null)
+                            setEmailStep('enter-email')
+                          }}
+                          onCodeSubmit={onCodeSubmit}
+                          emailState={emailState}
+                        />
+                      )}
+
+                      <DividerOr />
+
+                      {/* CONNECT WALLET triggers Privy wallet login to create an authenticated session */}
+                      <button
+                        className="w-full inline-flex items-center justify-center rounded-2xl border border-emerald-400/50 bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-500 px-4 py-3 text-lg font-bold text-white shadow-[0_10px_28px_rgba(16,185,129,0.35)] hover:shadow-[0_14px_34px_rgba(16,185,129,0.45)] active:scale-[.99] transition disabled:opacity-60"
+                        onClick={() => {
+                          if (emailStep === 'enter-code') return
+                          preflightEnsureAllowedNetwork(() => {
+                            try { if (dialogRef.current?.open) dialogRef.current.close() } catch {}
+                            // Open Privy login modal with only wallet method, so SIWE completes and `authenticated` flips true
+                            login({ loginMethods: ['wallet'] })
+                          })
                         }}
-                        onCodeSubmit={onCodeSubmit}
-                        emailState={emailState}
+                        disabled={emailStep === 'enter-code'}
+                      >
+                        <span className="mr-2 inline-flex items-center">
+                          <WalletIcon />
+                        </span>
+                        <span>Connect Wallet</span>
+                      </button>
+
+                      <GoogleButton
+                        disabled={oauthLoading || emailStep === 'enter-code'}
+                        onClick={() => {
+                          if (emailStep === 'enter-code') return
+                          setLoginMethod('oauth')
+                          initOAuth({ provider: 'google' })
+                        }}
                       />
-                    )}
-
-                    <DividerOr />
-
-                    {/* CONNECT WALLET triggers Privy wallet login to create an authenticated session */}
-                    <button
-                      className="w-full inline-flex items-center justify-center rounded-2xl border border-emerald-400/50 bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-500 px-4 py-3 text-lg font-bold text-white shadow-[0_10px_28px_rgba(16,185,129,0.35)] hover:shadow-[0_14px_34px_rgba(16,185,129,0.45)] active:scale-[.99] transition disabled:opacity-60"
-                      onClick={() => {
-                        if (emailStep === 'enter-code') return
-                        preflightEnsureAllowedNetwork(() => {
-                          try { if (dialogRef.current?.open) dialogRef.current.close() } catch {}
-                          // Open Privy login modal with only wallet method, so SIWE completes and `authenticated` flips true
-                          login({ loginMethods: ['wallet'] })
+                    </>
+                  ) : (
+                    <WalletPickerScrollable
+                      connectWith={async (w) => {
+                        await preflightEnsureAllowedNetwork(async () => {
+                          await connectWith(w)
                         })
                       }}
-                      disabled={emailStep === 'enter-code'}
-                    >
-                      <span className="mr-2 inline-flex items-center">
-                        <WalletIcon />
-                      </span>
-                      <span>Connect Wallet</span>
-                    </button>
-
-                    <GoogleButton
-                      disabled={oauthLoading || emailStep === 'enter-code'}
-                      onClick={() => {
-                        if (emailStep === 'enter-code') return
-                        setLoginMethod('oauth')
-                        initOAuth({ provider: 'google' })
-                      }}
+                      onBack={() => setWalletMode(false)}
                     />
-                  </>
-                ) : (
-                  <WalletPickerScrollable
-                    connectWith={async (w) => {
-                      await preflightEnsureAllowedNetwork(async () => {
-                        await connectWith(w)
-                      })
-                    }}
-                    onBack={() => setWalletMode(false)}
-                  />
-                )}
-              </>
-            )}
-          </div>
-        )}
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
       <NetworkModal
         open={networkOpen}
@@ -717,6 +756,7 @@ declare global {
 //     <path d="M17.25 5.25H6a2.25 2.25 0 0 0-2.25 2.25v1.5" stroke="currentColor" strokeWidth="1.6"/>
 //   </svg>
 // )
+
 
 // const GoogleIcon = ({ size = 18 }: { size?: number }) => (
 //   <svg width={size} height={size} viewBox="0 0 24 24">
