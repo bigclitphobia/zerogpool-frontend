@@ -14,7 +14,6 @@ import kultGameLogo from '../assets/kultLogo.png'
 import MyLogo from '../assets/logo.png'
 import NetworkModal from './NetworkModal'
 import { getAllowedChainFromEnv } from '../lib/chain'
-import GateWalletConnectButton from './GateWalletConnectButton'
 
 /* ============================== Helpers ============================== */
 function getPrimaryWalletAddress(user: any | undefined | null): string | undefined {
