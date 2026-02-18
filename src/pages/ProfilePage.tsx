@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
+import { useNavigate } from 'react-router-dom'
 import profileIcon from '../assets/profileIcon.png'
 import frameLg from '../assets/leaderboardFrame.png'
 import trophy from '../assets/trophy.png'
 import ball5 from '../assets/balls/ball-5.png'
-import { getPlayerData,  getPlayerStats, getToken, setToken } from '../lib/api' //remove update player name
+import { getPlayerData, getPlayerStats, getToken, setToken, getWalletAddress } from '../lib/api' //remove update player name
 
 function formatPlayTime(totalMinutes: number | undefined) {
   if (!totalMinutes || totalMinutes <= 0) return '—'
@@ -28,22 +29,26 @@ const Row = ({ icon, label, value }: { icon: React.ReactNode; label: string; val
 const ProfilePage = () => {
   const { authenticated, user, logout } = usePrivy()
   const { wallets } = useWallets()
+  const navigate = useNavigate()
   const [name, setName] = useState('')
   // const [setSaving] = useState(false) //remove saving
   const [stats, setStats] = useState<any | null>(null)
   const [loadingStats, setLoadingStats] = useState(false)
+  const token = getToken()
+  const isAuthenticated = authenticated || Boolean(token)
 
   const address = useMemo(
     () =>
       (user as any)?.wallet?.address ||
       (user as any)?.embeddedWallets?.[0]?.address ||
       wallets.find((w) => !!w.address)?.address ||
+      getWalletAddress() ||
       '',
     [user, wallets]
   )
 
   useEffect(() => {
-    if (!authenticated || !getToken()) return
+    if (!isAuthenticated || !getToken()) return
     let active = true
     getPlayerData()
       .then((data) => {
@@ -55,22 +60,69 @@ const ProfilePage = () => {
     return () => {
       active = false
     }
-  }, [authenticated])
+  }, [isAuthenticated])
 
   useEffect(() => {
-    if (!authenticated || !getToken()) return
+    if (!isAuthenticated || !getToken()) return
     setLoadingStats(true)
     getPlayerStats()
       .then((data) => setStats(data || {}))
       .catch(() => setStats({}))
       .finally(() => setLoadingStats(false))
-  }, [authenticated])
+  }, [isAuthenticated])
 
   const short = useMemo(() => (address ? `${address.slice(0, 6)}…${address.slice(-4)}` : ''), [address])
 
+  const CopyAddressButton = ({ className = '' }: { className?: string }) => {
+    if (!address) return null
+
+    async function handleCopy() {
+      try {
+        await navigator.clipboard.writeText(address)
+      } catch {
+        // ignore copy errors
+      }
+    }
+
+    return (
+      <button
+        type="button"
+        onClick={handleCopy}
+        className={`ml-2 inline-flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white/80 p-1 ${className}`}
+        title="Copy address"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="none"
+          className="h-3.5 w-3.5"
+        >
+          <rect
+            x="7"
+            y="3"
+            width="9"
+            height="11"
+            rx="2"
+            stroke="currentColor"
+            strokeWidth="1.3"
+          />
+          <rect
+            x="4"
+            y="6"
+            width="9"
+            height="11"
+            rx="2"
+            stroke="currentColor"
+            strokeWidth="1.3"
+          />
+        </svg>
+      </button>
+    )
+  }
+
   async function handleLogout() {
     try {
-      await logout()
+      if (authenticated) await logout()
     } finally {
       // Clear backend JWT and any local wallet connection flag
       setToken(null)
@@ -78,6 +130,8 @@ const ProfilePage = () => {
         localStorage.removeItem("walletAddress")
         localStorage.removeItem('wallet_connected')
       } catch {}
+      navigate('/', { replace: true })
+      window.location.reload()
     }
   }
 
@@ -109,7 +163,12 @@ const ProfilePage = () => {
                   <img src={profileIcon} className="h-16 w-16 rounded-full ring-2 ring-white/40" alt="Profile" />
                   <div>
                     <div className="text-white text-3xl font-extrabold tracking-wide">{name || 'Your username'}</div>
-                    {address && <div className="text-white/80 text-sm font-mono">{short}</div>}
+                    {address && (
+                      <div className="flex items-center text-white/80 text-sm font-mono">
+                        <span className="truncate max-w-[220px] sm:max-w-none">{address}</span>
+                        <CopyAddressButton />
+                      </div>
+                    )}
                   </div>
                 </div>
                 <button onClick={handleLogout} className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 px-4 py-2 text-sm font-semibold text-white">
@@ -135,7 +194,12 @@ const ProfilePage = () => {
               <img src={profileIcon} className="h-14 w-14 rounded-full ring-2 ring-white/40" alt="Profile" />
               <div>
                 <div className="text-white text-2xl font-extrabold tracking-wide">{name || 'Your username'}</div>
-                {address && <div className="text-white/80 text-sm font-mono">{short}</div>}
+                {address && (
+                  <div className="flex items-center text-white/80 text-sm font-mono">
+                    <span>{short}</span>
+                    <CopyAddressButton />
+                  </div>
+                )}
               </div>
             </div>
             <button onClick={handleLogout} className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 px-3 py-2 text-sm font-semibold text-white">
