@@ -26,8 +26,10 @@ export const privyConfig: PrivyClientConfig = {
     ] as any,
   },
   embeddedWallets: {
-    // 👇 automatically create wallet for new users (only when using Privy UI)
-    createOnLogin: 'users-without-wallets',
+    ethereum: {
+      // automatically create wallet for new users (only when using Privy UI)
+      createOnLogin: 'users-without-wallets',
+    },
   },
   loginMethods: ['wallet', 'email', 'google'],
 }
