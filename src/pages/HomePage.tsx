@@ -8,6 +8,7 @@ import gameMannual from '../assets/gameMannual.png'
 import LoginModal from '../components/LoginModal'
 import ReferralModal from '../components/ReferralModal'
 import { getPlayerData, getToken, getWalletAddress } from '../lib/api'
+import { getJwtFromUrl } from '../lib/session'
 import rulesIcon from '../assets/rulesIcon.png';
 import leaderboardBtnIcon from '../assets/leaderboard.png';
 import startSeesionBtnIcon from '../assets/startSession.png';
@@ -37,6 +38,21 @@ export default function HomePage() {
     console.log('Wallets:', wallets)
     console.groupEnd()
   }, [authenticated, user, wallets])
+
+  // Check for autologin parameters and redirect if needed
+  useEffect(() => {
+    const jwt = getJwtFromUrl();
+    
+    if (jwt) {
+      console.log('[HomePage] Autologin parameters detected, redirecting to AutoLogin', { jwt: Boolean(jwt) });
+      navigate({
+        pathname: '/autologin',
+        search: window.location.search,
+        hash: window.location.hash,
+      }, { replace: true });
+      return;
+    }
+  }, [navigate]);
 
   // NEW: Handle Privy wallet login and show toast
   useEffect(() => {

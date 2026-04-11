@@ -9,11 +9,13 @@ import Layout from './components/Layout'
 import NFTPage from './pages/NFTPage'
 import PaidNFTPage from './pages/paidNFTPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import AutoLogin from './pages/AutoLogin'
 
 function App() {
   return (
     <BlockchainToastProvider>
       <Routes>
+        <Route path="/autologin" element={<AutoLogin />} />
         <Route element={<Layout />}>
           <Route index element={<HomePage />} />
           <Route path="/rules" element={<RulesPage />} />

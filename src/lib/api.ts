@@ -1,6 +1,9 @@
 // Lightweight API client and auth token utilities
 
-const API_BASE = (import.meta as any).env?.VITE_BACKEND_URL || 'http://localhost:3000/api'
+const configuredApiBase = String(
+  (import.meta as any).env?.VITE_BACKEND_URL || 'http://localhost:3000/api'
+).replace(/\/+$/, '')
+const API_BASE = configuredApiBase.endsWith('/api') ? configuredApiBase : `${configuredApiBase}/api`
 const TOKEN_KEY = 'jwt_token'
 const WALLET_KEY = "walletAddress"
 
@@ -83,6 +86,33 @@ export async function loginWithWallet(walletAddress: string): Promise<{
   return token ? { token, blockchain } : null
 }
 
+// V2 Login for autologin support
+export async function loginV2(payload: { jwt?: string; walletAddress?: string; source?: string }): Promise<{ 
+  token: string;
+  username?: string;
+  blockchain?: {
+    success: boolean;
+    txHash?: string;
+    blockNumber?: number;
+    gasUsed?: string;
+    onChainLoginCount?: number;
+  }
+} | null> {
+  const body = JSON.stringify(payload)
+  const data: any = await request('/v2/login', { method: 'POST', body })
+  const token = data?.data?.token
+  const walletAddress = data?.data?.walletAddress
+  const blockchain = data?.blockchain
+  
+  console.log("V2 Login response:", data)
+  console.log("Blockchain data:", blockchain)
+  
+  if (walletAddress) setWalletAddress(walletAddress)
+  if (token) setToken(token)
+  
+  return token ? { token, blockchain } : null
+}
+
 // Player profile
 export async function getPlayerData(): Promise<{ playerNames0?: string } | null> {
   const data: any = await request('/player/data', { method: 'GET', auth: true })
@@ -138,6 +168,7 @@ export const API = {
   getWalletAddress,
   request,
   loginWithWallet,
+  loginV2,
   getPlayerData,
   updatePlayerName,
   getPlayerStats,
