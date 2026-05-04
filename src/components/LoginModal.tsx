@@ -503,8 +503,7 @@ export default function LoginModal({
 
   const connectWith = async (wallet: WalletId) => {
     try {
-      try { if (dialogRef.current?.open) dialogRef.current.close() } catch {}
-      onClose?.()
+      setError('')
       await connectWallet({ walletList: [wallet as any] })
     } catch (err: any) {
       console.error('connectWith error', err)

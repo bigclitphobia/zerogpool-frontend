@@ -20,16 +20,15 @@ export default function HomePage() {
   const { showToast } = useBlockchainToast() // NEW
   const [showLogin, setShowLogin] = useState(false)
   const [showReferral, setShowReferral] = useState(false)
-  const [playerName, setPlayerName] = useState<string | null>(null)
   const [hasShownLoginToast, setHasShownLoginToast] = useState(false) // NEW
   const navigate = useNavigate()
   const token = getToken()
-  const isAuthenticated = authenticated || Boolean(token)
   const connectedAddress =
     (user as any)?.wallet?.address ||
     (user as any)?.embeddedWallets?.[0]?.address ||
     wallets.find((w) => !!w.address)?.address ||
     getWalletAddress()
+  const isAuthenticated = authenticated || Boolean(token) || Boolean(connectedAddress)
 
   useEffect(() => {
     if (!authenticated || !user) return
@@ -56,11 +55,12 @@ export default function HomePage() {
 
   // NEW: Handle Privy wallet login and show toast
   useEffect(() => {
-    if (!authenticated || !connectedAddress || hasShownLoginToast) return
+    if (!connectedAddress || hasShownLoginToast) return
     
     const handlePrivyLogin = async () => {
       try {
         const loginResult = await loginWithWallet(connectedAddress)
+        localStorage.setItem('wallet_connected', 'true')
         
         if (loginResult?.blockchain?.txHash) {
           showToast({
@@ -77,7 +77,7 @@ export default function HomePage() {
     }
     
     handlePrivyLogin()
-  }, [authenticated, connectedAddress, hasShownLoginToast, showToast])
+  }, [connectedAddress, hasShownLoginToast, showToast])
 
   // Fetch player name once we have JWT from backend login
   useEffect(() => {
@@ -95,10 +95,8 @@ export default function HomePage() {
         return
       }
       getPlayerData()
-        .then((data) => {
+        .then(() => {
           if (!active) return
-          const name = (data && (data as any).playerNames0) || null
-          setPlayerName(name)
         })
         .catch(() => {})
     }
@@ -106,7 +104,7 @@ export default function HomePage() {
     return () => { active = false }
   }, [isAuthenticated])
 
-  console.log("connected Address is ",connectedAddress," player Name is ",playerName)
+  // Keep Home resilient when wallet/provider state lags briefly.
 
   async function startSession() {
     let token = getToken()
