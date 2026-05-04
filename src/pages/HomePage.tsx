@@ -23,12 +23,19 @@ export default function HomePage() {
   const [hasShownLoginToast, setHasShownLoginToast] = useState(false) // NEW
   const navigate = useNavigate()
   const token = getToken()
+  const sessionConnected = (() => {
+    try {
+      return localStorage.getItem('wallet_connected') === 'true'
+    } catch {
+      return false
+    }
+  })()
   const connectedAddress =
     (user as any)?.wallet?.address ||
     (user as any)?.embeddedWallets?.[0]?.address ||
     wallets.find((w) => !!w.address)?.address ||
     getWalletAddress()
-  const isAuthenticated = authenticated || Boolean(token) || Boolean(connectedAddress)
+  const isAuthenticated = authenticated || Boolean(token) || sessionConnected
 
   useEffect(() => {
     if (!authenticated || !user) return
@@ -55,7 +62,7 @@ export default function HomePage() {
 
   // NEW: Handle Privy wallet login and show toast
   useEffect(() => {
-    if (!connectedAddress || hasShownLoginToast) return
+    if (!authenticated || !connectedAddress || hasShownLoginToast) return
     
     const handlePrivyLogin = async () => {
       try {
@@ -77,7 +84,7 @@ export default function HomePage() {
     }
     
     handlePrivyLogin()
-  }, [connectedAddress, hasShownLoginToast, showToast])
+  }, [authenticated, connectedAddress, hasShownLoginToast, showToast])
 
   // Fetch player name once we have JWT from backend login
   useEffect(() => {

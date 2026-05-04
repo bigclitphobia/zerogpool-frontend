@@ -4,7 +4,6 @@ import {
   useConnectWallet,
   useLoginWithEmail,
   useLoginWithOAuth,
-  useLogin,
   usePrivy,
   useCreateWallet,
 } from '@privy-io/react-auth'
@@ -14,6 +13,7 @@ import kultGameLogo from '../assets/kultLogo.png'
 import MyLogo from '../assets/logo.png'
 import NetworkModal from './NetworkModal'
 import { getAllowedChainFromEnv } from '../lib/chain'
+import { clearClientAuthSession } from '../lib/api'
 
 /* ============================== Helpers ============================== */
 function getPrimaryWalletAddress(user: any | undefined | null): string | undefined {
@@ -446,9 +446,6 @@ export default function LoginModal({
     onError: (err: any) => setError((err?.message ?? err?.code ?? String(err)) || 'Email login error'),
   })
 
-  // Privy modal login (use for wallet auth so `authenticated` becomes true)
-  const { login } = useLogin()
-
   // Network gating state
   const [networkOpen, setNetworkOpen] = useState(false)
   const allowedChain = getAllowedChainFromEnv() || {
@@ -504,7 +501,13 @@ export default function LoginModal({
   const connectWith = async (wallet: WalletId) => {
     try {
       setError('')
-      await connectWallet({ walletList: [wallet as any] })
+      // Switching wallets must clear previous Privy/local session first,
+      // otherwise Privy may immediately reuse the previously linked wallet.
+      if (authenticated) {
+        await logout().catch(() => {})
+      }
+      clearClientAuthSession()
+      await connectWallet({ walletList: [wallet as any], walletChainType: 'ethereum-only' as any })
     } catch (err: any) {
       console.error('connectWith error', err)
       setError(err?.message || 'Failed to connect wallet')
@@ -674,16 +677,10 @@ export default function LoginModal({
                         onClick={() => {
                           if (emailStep === 'enter-code') return
                           preflightEnsureAllowedNetwork(async () => {
-                            try {
-                              // Open Privy wallet auth first (SIWE flow).
-                              await login({ loginMethods: ['wallet'] })
-                            } catch (err: any) {
-                              // Some extensions throw during "selectExtension" in injected providers.
-                              // Fallback to our explicit wallet list to avoid hard-failing connect.
-                              const msg = (err?.message ?? err?.code ?? String(err)) || 'Failed to connect wallet'
-                              setError(`Wallet modal failed (${msg}). Try selecting a wallet manually below.`)
-                              setWalletMode(true)
-                            }
+                            // Use our wallet picker first to avoid dialog/focus conflicts
+                            // between the custom <dialog> and Privy auth FocusTrap.
+                            setError('')
+                            setWalletMode(true)
                           })
                         }}
                         disabled={emailStep === 'enter-code'}

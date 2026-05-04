@@ -5,7 +5,7 @@ import profileIcon from '../assets/profileIcon.png'
 import frameLg from '../assets/leaderboardFrame.png'
 import trophy from '../assets/trophy.png'
 import ball5 from '../assets/balls/ball-5.png'
-import { getPlayerData, getPlayerStats, getToken, setToken, getWalletAddress } from '../lib/api' //remove update player name
+import { getPlayerData, getPlayerStats, getToken, getWalletAddress, clearClientAuthSession } from '../lib/api' //remove update player name
 
 function formatPlayTime(totalMinutes: number | undefined) {
   if (!totalMinutes || totalMinutes <= 0) return '—'
@@ -122,14 +122,10 @@ const ProfilePage = () => {
 
   async function handleLogout() {
     try {
-      if (authenticated) await logout()
+      await logout().catch(() => {})
     } finally {
-      // Clear backend JWT and any local wallet connection flag
-      setToken(null)
-      try {
-        localStorage.removeItem("walletAddress")
-        localStorage.removeItem('wallet_connected')
-      } catch {}
+      // Always clear local session markers and cached auth keys.
+      clearClientAuthSession()
       navigate('/', { replace: true })
       window.location.reload()
     }

@@ -42,6 +42,17 @@ export function setWalletAddress(wallet: string | null) {
   }
 }
 
+export function clearClientAuthSession() {
+  try {
+    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(WALLET_KEY)
+    localStorage.removeItem('wallet_connected')
+    localStorage.removeItem('username')
+  } catch {
+    // ignore storage errors
+  }
+}
+
 type RequestOptions = RequestInit & { auth?: boolean }
 
 async function request<T = any>(path: string, opts: RequestOptions = {}): Promise<T> {
@@ -177,6 +188,7 @@ export const API = {
   getToken,
   setToken,
   getWalletAddress,
+  clearClientAuthSession,
   request,
   loginWithWallet,
   loginV2,
