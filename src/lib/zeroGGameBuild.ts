@@ -201,82 +201,48 @@ async function verifyCdnBlobMatches0gRoot(expectedRoot: string, data: Blob): Pro
   }
 }
 
-/** Non-blocking: resolve 0G dataset locations for this root hash (proves indexer linkage). */
-function touch0GDataset(indexer: Indexer, rootHash: string, relativePath: string): void {
-  void indexer
-    .getFileLocations(rootHash)
-    .then((locs) => {
-      const n = Array.isArray(locs) ? locs.length : 0
-      console.info(`${LOG} 0g dataset`, relativePath, rootHash.slice(0, 14) + '…', `nodes=${n}`)
-    })
-    .catch((e) => {
-      console.warn(`${LOG} 0g dataset`, relativePath, e)
-    })
-}
-
 /**
- * Prefer CDN bytes when `cdnBaseUrl` is set; always touch 0G indexer; fall back to full 0G download.
+ * CDN-first runtime bytes. This frontend no longer falls back to 0G downloadToBlob.
+ * `root_hash` is still used for optional integrity verification.
  */
 async function fetchBlobForEntry(
-  indexer: Indexer,
+  _indexer: Indexer,
   e: BuildManifestEntry,
   cdnBaseUrl: string | undefined,
   label: string,
 ): Promise<Blob> {
-  touch0GDataset(indexer, e.root_hash, e.relative_path)
-
   const cdn = String(cdnBaseUrl || '').trim()
-  if (cdn) {
-    const url = cdnAssetUrl(cdn, e.relative_path)
-    try {
-      const t0 = performance.now()
-      const res = await fetch(url, { mode: 'cors', cache: 'default' })
-      if (res.ok) {
-        const blob = await res.blob()
-        if (blob.size) {
-          const expected = e.size_bytes
-          if (expected != null && expected > 0 && blob.size !== expected) {
-            console.warn(
-              `${LOG} CDN size mismatch, using 0G`,
-              e.relative_path,
-              blob.size,
-              'vs',
-              expected,
-            )
-          } else {
-            const verifyRoot = shouldVerifyCdnRootAgainstManifest()
-            let acceptCdn = true
-            if (verifyRoot) {
-              acceptCdn = await verifyCdnBlobMatches0gRoot(e.root_hash, blob)
-              if (!acceptCdn) {
-                console.warn(`${LOG} CDN rejected (not same 0G root as manifest), using 0G`, e.relative_path)
-              }
-            }
-            if (acceptCdn) {
-              console.info(
-                `${LOG} CDN`,
-                label,
-                e.relative_path,
-                `${blob.size}b`,
-                verifyRoot ? 'verified_root' : 'root_verify_off',
-                `${Math.round(performance.now() - t0)}ms`,
-              )
-              return blob
-            }
-          }
-        }
-      } else {
-        console.warn(`${LOG} CDN HTTP ${res.status}`, url.slice(0, 96))
-      }
-    } catch (err) {
-      console.warn(`${LOG} CDN fetch failed`, e.relative_path, err)
-    }
+  if (!cdn) {
+    throw new Error(`CDN base URL missing for ${e.relative_path} (set cdnBaseUrl / VITE_UNITY_GAME_URL)`)
+  }
+  const url = cdnAssetUrl(cdn, e.relative_path)
+  const t0 = performance.now()
+  const res = await fetch(url, { mode: 'cors', cache: 'default' })
+  if (!res.ok) {
+    throw new Error(`CDN HTTP ${res.status} for ${e.relative_path}`)
+  }
+  const blob = await res.blob()
+  if (!blob.size) {
+    throw new Error(`CDN empty body for ${e.relative_path}`)
+  }
+  const expected = e.size_bytes
+  if (expected != null && expected > 0 && blob.size !== expected) {
+    throw new Error(`CDN size mismatch for ${e.relative_path}: ${blob.size} vs ${expected}`)
   }
 
-  const [blob, err] = await indexer.downloadToBlob(e.root_hash, { proof: false })
-  if (err) throw err
-  if (!blob?.size) throw new Error(`0G empty body: ${e.relative_path}`)
-  console.info(`${LOG} 0G bytes`, label, e.relative_path, `${blob.size}b`)
+  const verifyRoot = shouldVerifyCdnRootAgainstManifest()
+  if (verifyRoot) {
+    const ok = await verifyCdnBlobMatches0gRoot(e.root_hash, blob)
+    if (!ok) throw new Error(`CDN root_hash mismatch for ${e.relative_path}`)
+  }
+  console.info(
+    `${LOG} CDN`,
+    label,
+    e.relative_path,
+    `${blob.size}b`,
+    verifyRoot ? 'verified_root' : 'root_verify_off',
+    `${Math.round(performance.now() - t0)}ms`,
+  )
   return blob
 }
 
