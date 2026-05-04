@@ -3,7 +3,8 @@
 const configuredApiBase = String(
   (import.meta as any).env?.VITE_BACKEND_URL || 'http://localhost:3000/api'
 ).replace(/\/+$/, '')
-const API_BASE = configuredApiBase.endsWith('/api') ? configuredApiBase : `${configuredApiBase}/api`
+/** Normalized `/api` base (used by game manifest + other clients). */
+export const API_BASE = configuredApiBase.endsWith('/api') ? configuredApiBase : `${configuredApiBase}/api`
 const TOKEN_KEY = 'jwt_token'
 const WALLET_KEY = "walletAddress"
 
@@ -48,7 +49,12 @@ async function request<T = any>(path: string, opts: RequestOptions = {}): Promis
   if (opts.headers) Object.assign(headers, opts.headers as any)
   if (opts.auth) {
     const token = getToken()
-    if (token) headers['Authorization'] = `Bearer ${token}`
+    if (!token) {
+      throw new Error(
+        'Not signed in (missing session). Connect your wallet and complete login, then try again.',
+      )
+    }
+    headers['Authorization'] = `Bearer ${token}`
   }
 
   const res = await fetch(`${API_BASE}${path}`, { ...opts, headers })
@@ -139,6 +145,11 @@ export type LeaderboardRow = {
   playerName: string
   totalBallsPocketed: number
   totalGamesWon: number
+  trust?: {
+    antiCheatSource: string | null
+    antiCheatCheckedAt: string | null
+    saveBackedBy0g: boolean
+  }
 }
 
 export async function getLeaderboard(): Promise<LeaderboardRow[]> {

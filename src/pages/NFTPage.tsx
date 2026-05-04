@@ -7,6 +7,7 @@ import { getPlayerData, updatePlayerName, getToken } from '../lib/api'
 const NFTPage = () => {
   const navigate = useNavigate()
   const [checking, setChecking] = useState(true)
+  const [needsLogin, setNeedsLogin] = useState(false)
   const [name, setName] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -22,6 +23,7 @@ const NFTPage = () => {
           attempts += 1
           setTimeout(bootstrap, 400)
         } else {
+          setNeedsLogin(true)
           setChecking(false)
         }
         return
@@ -52,6 +54,10 @@ const NFTPage = () => {
 
   async function saveName() {
     if (!name.trim() || saving) return
+    if (!getToken()) {
+      setNeedsLogin(true)
+      return
+    }
     setSaving(true)
     try {
       await updatePlayerName(name.trim())
@@ -88,6 +94,17 @@ const NFTPage = () => {
                   <span className="inline-block h-4 w-4 rounded-full border-2 border-cyan-300 border-t-transparent animate-spin" />
                   <span className="text-sm">Checking your profile…</span>
                 </div>
+              ) : needsLogin ? (
+                <div className="text-center text-sm text-white/85 space-y-3">
+                  <p>You need an active session to save your player name.</p>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/')}
+                    className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 px-4 py-2 text-xs font-semibold text-white"
+                  >
+                    Back to home to connect and log in
+                  </button>
+                </div>
               ) : (
                 <div >
                   <label className="block text-xs text-white/80 mb-2 tracking-wide text-center">Enter your username</label>
@@ -105,7 +122,7 @@ const NFTPage = () => {
                     />
                     <button
                       onClick={saveName}
-                      disabled={!name.trim() || saving}
+                      disabled={!name.trim() || saving || needsLogin}
                       className="rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
                     >
                       {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save'}

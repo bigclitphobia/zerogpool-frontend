@@ -14,6 +14,7 @@ import trophyIcon from '../assets/trophy.png'
 import { getAllowedChainFromEnv } from '../lib/chain'
 import { getGateWalletCurrentNetwork } from '../lib/gateWallet'
 import { getPlayerData, getPlayerStats, getToken, getWalletAddress } from '../lib/api'
+import { startBuildPrefetchFromManifest } from '../lib/zeroGGameBuild'
 
 const DEFAULT_ALLOWED_CHAIN = {
   caip2: 'eip155:16661',
@@ -60,6 +61,13 @@ const Layout: React.FC = () => {
 
   const [networkOpen, setNetworkOpen] = useState(false)
   const allowedChain = useMemo(() => getAllowedChainFromEnv() || DEFAULT_ALLOWED_CHAIN, [])
+
+  useEffect(() => {
+    console.info('[ZGP:0g-build] Layout: kick off background prefetch (any route)')
+    startBuildPrefetchFromManifest().catch((err) => {
+      console.warn('[ZGP:0g-build] Layout: prefetch error (game may still work on /game)', err)
+    })
+  }, [])
 
   // Header dynamic values
   const [wins, setWins] = useState<number | null>(null)
@@ -211,6 +219,9 @@ const Layout: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-3">
+                <span className="hidden md:inline-flex rounded-full border border-cyan-300/70 bg-cyan-500/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-cyan-100">
+                  Secured on 0G
+                </span>
                 <Link to="/profile" className="flex items-center gap-2 bg-gradient-to-r from-sky-500/70 to-blue-500/70 backdrop-blur rounded-2xl pl-1.5 pr-3.5 py-1.5 sm:pl-1 sm:pr-3 sm:py-1 ring-1 ring-white/20 shadow-[0_6px_18px_rgba(0,0,0,0.25)] cursor-pointer">
                   <img src={profileIcon} alt="Profile" className="h-10 w-10 sm:h-9 sm:w-9 md:h-10 md:w-10 rounded-full ring-2 ring-white/40" />
                   {/* Hide wallet text on mobile for all pages; show only the icon */}

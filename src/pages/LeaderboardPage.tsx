@@ -63,6 +63,11 @@ const Table = () => {
           <span title={`${row.totalBallsPocketed} balls`} className="text-3xl md:text-4xl font-extrabold drop-shadow-[0px_2px_4px_0px_#666180]">
             {row.totalBallsPocketed}
           </span>
+          {row.trust?.saveBackedBy0g ? (
+            <span className="ml-3 rounded-full border border-cyan-300/60 bg-cyan-500/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-cyan-100">
+              Secured on 0G
+            </span>
+          ) : null}
         </div>
       ))}
     </div>
