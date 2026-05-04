@@ -4,6 +4,7 @@ import {
   useConnectWallet,
   useLoginWithEmail,
   useLoginWithOAuth,
+  useLogin,
   usePrivy,
   useCreateWallet,
 } from '@privy-io/react-auth'
@@ -428,6 +429,9 @@ export default function LoginModal({
     onError: (err: any) => setError((err?.message ?? err?.code ?? String(err)) || 'Failed to connect wallet'),
   })
 
+  // Privy modal login (wallet list UI)
+  const { login } = useLogin()
+
   // Social login
   const { initOAuth, loading: oauthLoading } = useLoginWithOAuth({
     onComplete: async () => {
@@ -677,10 +681,9 @@ export default function LoginModal({
                         onClick={() => {
                           if (emailStep === 'enter-code') return
                           preflightEnsureAllowedNetwork(async () => {
-                            // Use our wallet picker first to avoid dialog/focus conflicts
-                            // between the custom <dialog> and Privy auth FocusTrap.
                             setError('')
-                            setWalletMode(true)
+                            try { if (dialogRef.current?.open) dialogRef.current.close() } catch {}
+                            await login({ loginMethods: ['wallet'] })
                           })
                         }}
                         disabled={emailStep === 'enter-code'}
