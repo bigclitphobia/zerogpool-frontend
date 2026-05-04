@@ -460,12 +460,12 @@ export default function LoginModal({
     blockExplorerUrls: ['https://chainscan.0g.ai'],
   }
 
-  const preflightEnsureAllowedNetwork = async (onAllowed: () => void) => {
+  const preflightEnsureAllowedNetwork = async (onAllowed: () => Promise<void> | void) => {
     try {
       const eth = (window as any).ethereum
       if (!eth?.request) {
         // If we cannot detect a provider, allow flow to continue (WalletConnect, etc.)
-        onAllowed()
+        await onAllowed()
         return
       }
       const current = await eth.request({ method: 'eth_chainId' }).catch(() => undefined)
@@ -474,7 +474,7 @@ export default function LoginModal({
         setNetworkOpen(true)
         return
       }
-      onAllowed()
+      await onAllowed()
     } catch (e) {
       // On errors, be conservative and show network modal
       setNetworkOpen(true)
