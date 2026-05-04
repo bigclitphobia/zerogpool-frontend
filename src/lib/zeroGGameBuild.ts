@@ -96,10 +96,20 @@ function normalizeManifest(raw: unknown): BuildManifest {
   const shaRaw = (j as { manifestContentSha256?: unknown }).manifestContentSha256
   const manifestContentSha256 =
     typeof shaRaw === 'string' && /^[a-fA-F0-9]{64}$/.test(shaRaw.trim()) ? shaRaw.trim().toLowerCase() : undefined
+  const env = (import.meta as any).env || {}
+  const envCdnRaw = String(env.VITE_ZG_WEBGL_CDN_BASE_URL || '')
+    .trim()
+    .replace(/\/+$/, '')
+  const unityUrlRaw = String(env.VITE_UNITY_GAME_URL || '').trim()
+  const unityCdnRaw = unityUrlRaw
+    ? unityUrlRaw.replace(/\/index\.html$/i, '').replace(/\/+$/, '')
+    : ''
+  const effectiveCdn = cdnRaw || envCdnRaw || unityCdnRaw
+
   return {
     indexerUrl: j.indexerUrl,
     entries,
-    ...(cdnRaw ? { cdnBaseUrl: cdnRaw } : {}),
+    ...(effectiveCdn ? { cdnBaseUrl: effectiveCdn } : {}),
     ...(manifestContentSha256 ? { manifestContentSha256 } : {}),
   }
 }
@@ -119,6 +129,13 @@ export async function fetchBuildManifest(): Promise<BuildManifest> {
           manifestSource: manifestSource || '(unknown)',
           indexerUrl: m.indexerUrl || '(env or default)',
           cdnBaseUrl: m.cdnBaseUrl || '(none — 0G bytes only)',
+          cdnSource: (raw as { cdnBaseUrl?: string }).cdnBaseUrl
+            ? 'manifest'
+            : (import.meta as any).env?.VITE_ZG_WEBGL_CDN_BASE_URL
+              ? 'frontend_env_fallback'
+              : (import.meta as any).env?.VITE_UNITY_GAME_URL
+                ? 'unity_game_url_fallback'
+              : 'none',
           ...(m.manifestContentSha256 ? { manifestContentSha256: m.manifestContentSha256 } : {}),
           ...(probe ? { storageIndexerProbe: probe } : {}),
         })
