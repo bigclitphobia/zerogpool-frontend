@@ -83,7 +83,10 @@ function normalizeManifest(raw: unknown): BuildManifest {
   if (!Array.isArray(j.entries) || j.entries.length === 0) {
     throw new Error('manifest: missing entries')
   }
-  const cdnRaw = j.cdnBaseUrl != null ? String(j.cdnBaseUrl).trim().replace(/\/+$/, '') : ''
+  const normalizeCdnBase = (v: string): string =>
+    String(v).trim().replace(/\/+$/, '').replace(/\/index\.html$/i, '')
+
+  const cdnRaw = j.cdnBaseUrl != null ? normalizeCdnBase(String(j.cdnBaseUrl)) : ''
   const entries = j.entries.map((e) => ({
     relative_path: String((e as BuildManifestEntry).relative_path).trim(),
     root_hash: String((e as BuildManifestEntry).root_hash).trim(),
@@ -97,13 +100,9 @@ function normalizeManifest(raw: unknown): BuildManifest {
   const manifestContentSha256 =
     typeof shaRaw === 'string' && /^[a-fA-F0-9]{64}$/.test(shaRaw.trim()) ? shaRaw.trim().toLowerCase() : undefined
   const env = (import.meta as any).env || {}
-  const envCdnRaw = String(env.VITE_ZG_WEBGL_CDN_BASE_URL || '')
-    .trim()
-    .replace(/\/+$/, '')
+  const envCdnRaw = normalizeCdnBase(String(env.VITE_ZG_WEBGL_CDN_BASE_URL || ''))
   const unityUrlRaw = String(env.VITE_UNITY_GAME_URL || '').trim()
-  const unityCdnRaw = unityUrlRaw
-    ? unityUrlRaw.replace(/\/index\.html$/i, '').replace(/\/+$/, '')
-    : ''
+  const unityCdnRaw = unityUrlRaw ? normalizeCdnBase(unityUrlRaw) : ''
   const effectiveCdn = cdnRaw || envCdnRaw || unityCdnRaw
 
   return {
