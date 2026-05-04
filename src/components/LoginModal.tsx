@@ -674,10 +674,17 @@ export default function LoginModal({
                         className="w-full inline-flex items-center justify-center rounded-2xl border border-emerald-400/50 bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-500 px-4 py-3 text-lg font-bold text-white shadow-[0_10px_28px_rgba(16,185,129,0.35)] hover:shadow-[0_14px_34px_rgba(16,185,129,0.45)] active:scale-[.99] transition disabled:opacity-60"
                         onClick={() => {
                           if (emailStep === 'enter-code') return
-                          preflightEnsureAllowedNetwork(() => {
-                            try { if (dialogRef.current?.open) dialogRef.current.close() } catch {}
-                            // Open Privy login modal with only wallet method, so SIWE completes and `authenticated` flips true
-                            login({ loginMethods: ['wallet'] })
+                          preflightEnsureAllowedNetwork(async () => {
+                            try {
+                              // Open Privy wallet auth first (SIWE flow).
+                              await login({ loginMethods: ['wallet'] })
+                            } catch (err: any) {
+                              // Some extensions throw during "selectExtension" in injected providers.
+                              // Fallback to our explicit wallet list to avoid hard-failing connect.
+                              const msg = (err?.message ?? err?.code ?? String(err)) || 'Failed to connect wallet'
+                              setError(`Wallet modal failed (${msg}). Try selecting a wallet manually below.`)
+                              setWalletMode(true)
+                            }
                           })
                         }}
                         disabled={emailStep === 'enter-code'}
