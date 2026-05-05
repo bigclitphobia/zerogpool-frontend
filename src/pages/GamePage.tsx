@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import LiveLeaderboard from '../components/LiveLeaderboard'
 import PlayerStatsPanel from '../components/PlayerStatsPanel'
-import { getToken, getWalletAddress } from '../lib/api'
+import { getToken, getWalletAddress, getDaSnapshot } from '../lib/api'
 import { useBlockchainToast } from '../context/BlockchainToastContext'
 import {
   mountUnityFrom0gBuild,
@@ -18,6 +18,7 @@ const GamePage = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const revokeRef = useRef<(() => void) | null>(null)
   const aliveRef = useRef(true)
+  const lastDaEventIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     const wallet = getWalletAddress()
@@ -80,6 +81,31 @@ const GamePage = () => {
       revokeRef.current = null
     }
   }, [navigate, showToast])
+
+  // Poll DA snapshot every 30s while game is active — show toast when a new save is confirmed
+  useEffect(() => {
+    if (!walletAddress) return
+    const interval = setInterval(async () => {
+      const snap = await getDaSnapshot(walletAddress)
+      const latest = snap?.snapshot
+      if (!latest?.eventId) return
+      const status = latest.daStatus
+      if (
+        latest.eventId !== lastDaEventIdRef.current &&
+        (status === 'confirmed' || status === 'finalized')
+      ) {
+        lastDaEventIdRef.current = latest.eventId
+        showToast({
+          title: '✅ Match Saved on 0G DA',
+          description: 'Your game progress was confirmed on 0G Data Availability layer',
+          txHash: null,
+          type: 'da',
+          duration: 6000,
+        })
+      }
+    }, 30_000)
+    return () => clearInterval(interval)
+  }, [walletAddress, showToast])
 
   return (
     <div className="w-full h-full flex flex-col items-center px-2 py-2">

@@ -161,11 +161,55 @@ export type LeaderboardRow = {
     antiCheatCheckedAt: string | null
     saveBackedBy0g: boolean
   }
+  intelligence?: {
+    skillLevel: 'Beginner' | 'Intermediate' | 'Advanced' | 'Pro'
+  }
 }
 
 export async function getLeaderboard(): Promise<LeaderboardRow[]> {
   const data: any = await request('/leaderboard', { method: 'GET' })
   return data?.data || []
+}
+
+export type LeaderboardAiComment = {
+  comment: string | null
+  source: string | null
+}
+
+export async function getLeaderboardAiComment(walletAddress: string): Promise<LeaderboardAiComment | null> {
+  if (!walletAddress) return null
+  try {
+    const data: any = await request(
+      `/leaderboard/ai-comment?wallet=${encodeURIComponent(walletAddress)}`,
+      { method: 'GET' },
+    )
+    return {
+      comment: data?.comment ?? null,
+      source: data?._meta?.source ?? null,
+    }
+  } catch {
+    return null
+  }
+}
+
+// DA snapshot
+export type DaSnapshot = {
+  eventId?: string
+  eventType?: string
+  daStatus?: string
+  daReference?: string
+  submittedAt?: string
+  trigger?: string
+}
+
+export async function getDaSnapshot(walletAddress: string): Promise<{ snapshot: DaSnapshot | null; history: DaSnapshot[] } | null> {
+  if (!walletAddress) return null
+  try {
+    const data: any = await request(`/da/snapshot?wallet=${encodeURIComponent(walletAddress)}`, { method: 'GET' })
+    return { snapshot: data?.snapshot || null, history: data?.history || [] }
+  } catch {
+    return null
+  }
 }
 
 // Referral system
@@ -196,5 +240,7 @@ export const API = {
   updatePlayerName,
   getPlayerStats,
   getLeaderboard,
+  getLeaderboardAiComment,
+  getDaSnapshot,
   generateReferralCode,
 }

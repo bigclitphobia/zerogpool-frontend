@@ -463,21 +463,49 @@ export default function LoginModal({
 
   const preflightEnsureAllowedNetwork = async (onAllowed: () => Promise<void> | void) => {
     try {
-      const eth = (window as any).ethereum
-      if (!eth?.request) {
-        // If we cannot detect a provider, allow flow to continue (WalletConnect, etc.)
+      // Important: before wallet auth, do NOT touch window.ethereum.
+      // Privy's proxy provider (evmAsk.js) may throw `selectExtension` errors
+      // if no extension has been selected yet.
+      if (!authenticated) {
         await onAllowed()
         return
       }
-      const current = await eth.request({ method: 'eth_chainId' }).catch(() => undefined)
+
+      const eth = (window as any).ethereum
+      // Only query eth_chainId on a real wallet extension.
+      // Privy registers its own proxy as window.ethereum (evmAsk.js) which calls
+      // selectExtension() on any RPC request and throws "Unexpected error" when no
+      // extension is installed. Real extensions always have isMetaMask, isCoinbaseWallet,
+      // or similar brand flags.
+      const isRealExtension =
+        eth?.isMetaMask ||
+        eth?.isCoinbaseWallet ||
+        eth?.isPhantom ||
+        eth?.isOkxWallet ||
+        eth?.isBitKeep ||
+        eth?.isRainbow
+      if (!eth?.request || !isRealExtension) {
+        await onAllowed()
+        return
+      }
+      const current = await eth.request({ method: 'eth_chainId' }).catch((err: any) => {
+        const msg = String(err?.message || err || '')
+        if (msg.toLowerCase().includes('selectextension') || msg.toLowerCase().includes('unexpected error')) {
+          return undefined
+        }
+        throw err
+      })
       if (typeof current === 'string' && current.toLowerCase() !== allowedChain.hexChainId.toLowerCase()) {
-        // Show network modal; do not proceed to wallet connect
         setNetworkOpen(true)
         return
       }
       await onAllowed()
-    } catch (e) {
-      // On errors, be conservative and show network modal
+    } catch (err: any) {
+      const msg = String(err?.message || err || '')
+      if (msg.toLowerCase().includes('selectextension') || msg.toLowerCase().includes('unexpected error')) {
+        await onAllowed()
+        return
+      }
       setNetworkOpen(true)
     }
   }
@@ -502,20 +530,17 @@ export default function LoginModal({
     }
   }
 
-  const connectWith = async (wallet: WalletId) => {
-    try {
-      setError('')
-      // Switching wallets must clear previous Privy/local session first,
-      // otherwise Privy may immediately reuse the previously linked wallet.
-      if (authenticated) {
-        await logout().catch(() => {})
-      }
-      clearClientAuthSession()
-      await connectWallet({ walletList: [wallet as any], walletChainType: 'ethereum-only' as any })
-    } catch (err: any) {
-      console.error('connectWith error', err)
-      setError(err?.message || 'Failed to connect wallet')
-    }
+  const connectWith = (wallet: WalletId) => {
+    setError('')
+    clearClientAuthSession()
+    // Pass the chosen wallet first, then wallet_connect as a fallback.
+    // Do NOT pass a single-item walletList — Privy v3 calls selectExtension()
+    // immediately on it, which throws "Unexpected error" if the extension isn't
+    // available. A multi-entry list lets Privy show its picker gracefully.
+    connectWallet({
+      walletList: [wallet as any, 'wallet_connect'],
+      walletChainType: 'ethereum-only',
+    })
   }
 
   
@@ -683,7 +708,7 @@ export default function LoginModal({
                           preflightEnsureAllowedNetwork(async () => {
                             setError('')
                             try { if (dialogRef.current?.open) dialogRef.current.close() } catch {}
-                            await login({ loginMethods: ['wallet'] })
+                            login({ loginMethods: ['wallet'] })
                           })
                         }}
                         disabled={emailStep === 'enter-code'}
@@ -705,9 +730,9 @@ export default function LoginModal({
                     </>
                   ) : (
                     <WalletPickerScrollable
-                      connectWith={async (w) => {
-                        await preflightEnsureAllowedNetwork(async () => {
-                          await connectWith(w)
+                      connectWith={(w) => {
+                        preflightEnsureAllowedNetwork(() => {
+                          connectWith(w)
                         })
                       }}
                       onBack={() => setWalletMode(false)}

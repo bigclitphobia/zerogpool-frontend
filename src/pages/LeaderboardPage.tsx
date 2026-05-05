@@ -6,7 +6,73 @@ import ball3 from '../assets/balls/ball-3.png'
 import ball4 from '../assets/balls/ball-4.png'
 import ball5 from '../assets/balls/ball-5.png'
 import { useEffect, useState } from 'react'
-import { getLeaderboard, type LeaderboardRow } from '../lib/api'
+import {
+  getLeaderboard,
+  getLeaderboardAiComment,
+  getWalletAddress,
+  type LeaderboardAiComment,
+  type LeaderboardRow,
+} from '../lib/api'
+import { useBlockchainToast } from '../context/BlockchainToastContext'
+
+const sourceLabel = (source: string | null): string | null => {
+  if (!source) return null
+  const s = source.toLowerCase()
+  if (s.includes('0g') || s.includes('zero')) return 'via 0G Compute'
+  if (s.includes('cloudflare') || s.includes('cf') || s.includes('workers')) return 'via Cloudflare fallback'
+  return `via ${source}`
+}
+
+const AiCommentCard = () => {
+  const [data, setData] = useState<LeaderboardAiComment | null>(null)
+  const { showToast } = useBlockchainToast()
+  useEffect(() => {
+    const wallet = getWalletAddress()
+    if (!wallet) return
+    let active = true
+    getLeaderboardAiComment(wallet)
+      .then((res) => {
+        if (!active) return
+        setData(res)
+        if (res?.comment && res.source && /0g|zero/i.test(res.source)) {
+          showToast({
+            title: '🤖 AI Commentary Ready',
+            description: 'Pool analysis generated via 0G Compute',
+            txHash: null,
+            type: 'compute',
+            duration: 6000,
+          })
+        }
+      })
+      .catch(() => {
+        if (!active) return
+        setData(null)
+      })
+    return () => {
+      active = false
+    }
+  }, [showToast])
+
+  if (!data?.comment) return null
+  const label = sourceLabel(data.source)
+  return (
+    <div className="w-full mb-4 rounded-2xl border border-cyan-300/50 bg-cyan-500/10 px-5 py-4 shadow-[0px_-1px_16.5px_-1px_#00E5FF]">
+      <div className="flex items-center justify-between gap-3 mb-1">
+        <span className="text-xs sm:text-sm font-bold uppercase tracking-wide text-cyan-200">
+          AI Pool Commentary
+        </span>
+        {label ? (
+          <span className="text-[10px] sm:text-[11px] font-semibold uppercase text-cyan-100/80">
+            {label}
+          </span>
+        ) : null}
+      </div>
+      <p className="text-sm sm:text-base font-medium text-cyan-50/95 leading-snug">
+        {data.comment}
+      </p>
+    </div>
+  )
+}
 
 const Table = () => {
   const [rows, setRows] = useState<LeaderboardRow[] | null>(null)
@@ -31,6 +97,7 @@ const Table = () => {
   const list = rows || []
   return (
     <div className="flex pb-4 px-10 h-full min-h-0 flex-col w-full gap-4 overflow-auto">
+      <AiCommentCard />
       <div className="w-full flex items-center justify-between px-4 sm:px-8 py-2 sm:py-3 rounded-[16px] border-2 border-cyan-400 shadow-[0px_-1px_16.5px_-1px_#00E5FF]">
         <span className="text-base sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-[#00BBFF] drop-shadow-[0px_2px_4px_0px_#666180]">
           RANK

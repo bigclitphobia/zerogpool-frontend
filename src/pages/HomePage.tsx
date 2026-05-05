@@ -7,7 +7,7 @@ import connectWalletImg from '../assets/connectWallet.png'
 import gameMannual from '../assets/gameMannual.png'
 import LoginModal from '../components/LoginModal'
 import ReferralModal from '../components/ReferralModal'
-import { getPlayerData, getToken, getWalletAddress } from '../lib/api'
+import { getPlayerData, getToken, getWalletAddress, getDaSnapshot } from '../lib/api'
 import { getJwtFromUrl } from '../lib/session'
 import rulesIcon from '../assets/rulesIcon.png';
 import leaderboardBtnIcon from '../assets/leaderboard.png';
@@ -68,16 +68,47 @@ export default function HomePage() {
       try {
         const loginResult = await loginWithWallet(connectedAddress)
         localStorage.setItem('wallet_connected', 'true')
-        
+        setHasShownLoginToast(true)
+
         if (loginResult?.blockchain?.txHash) {
           showToast({
             title: '🎮 Login Successful',
             description: 'Session recorded on 0G blockchain',
             txHash: loginResult.blockchain.txHash,
-            duration: 6000
+            type: 'blockchain',
+            duration: 6000,
           })
-          setHasShownLoginToast(true)
         }
+
+        // Show DA submitted toast, then poll for BLS finality (max 60s, every 5s)
+        showToast({
+          title: '📡 Saving to 0G DA',
+          description: 'Session data submitted to 0G Data Availability layer',
+          txHash: null,
+          type: 'da',
+          duration: 5000,
+        })
+
+        const wallet = connectedAddress
+        let attempts = 0
+        const maxAttempts = 12 // 12 × 5s = 60s max
+        const poll = async () => {
+          attempts += 1
+          const snap = await getDaSnapshot(wallet)
+          const status = snap?.snapshot?.daStatus
+          if (status === 'confirmed' || status === 'finalized') {
+            showToast({
+              title: '✅ Saved on 0G DA',
+              description: 'Session data confirmed on 0G Data Availability layer',
+              txHash: null,
+              type: 'da',
+              duration: 7000,
+            })
+          } else if (attempts < maxAttempts) {
+            setTimeout(poll, 5000)
+          }
+        }
+        setTimeout(poll, 5000)
       } catch (error) {
         console.error('Failed to show login toast:', error)
       }

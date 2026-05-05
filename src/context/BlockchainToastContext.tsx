@@ -8,6 +8,7 @@ interface Toast {
   description: string;
   txHash: string | null;
   duration: number;
+  type?: 'blockchain' | 'da' | 'compute';
 }
 
 interface BlockchainToastContextType {
@@ -28,15 +29,16 @@ export const useBlockchainToast = () => {
 export const BlockchainToastProvider = ({ children }: { children: ReactNode }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback(({ title, description, txHash, duration = 6000 }: Omit<Toast, 'id'>) => {
-    console.log('🔔 [TOAST] showToast called with:', { title, txHash });
-    
+  const showToast = useCallback(({ title, description, txHash, duration = 6000, type }: Omit<Toast, 'id'>) => {
+    console.log('🔔 [TOAST] showToast called with:', { title, txHash, type });
+
     const id = Date.now();
     const newToast: Toast = {
       title,
       description,
       txHash,
       duration,
+      type,
       id
     };
 

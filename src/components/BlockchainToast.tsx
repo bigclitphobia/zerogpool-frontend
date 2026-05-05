@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import type { CSSProperties } from 'react';
-import { X, ExternalLink, Zap, AlertCircle } from 'lucide-react';
+import { X, ExternalLink, Zap, AlertCircle, Database, Cpu } from 'lucide-react';
 import './BlockchainToast.css';
 
 const BLOCK_EXPLORER = 'https://chainscan.0g.ai/tx/';
@@ -11,6 +11,7 @@ interface ToastProps {
     description: string;
     txHash: string | null;
     duration: number;
+    type?: 'blockchain' | 'da' | 'compute';
   };
   onClose: () => void;
   style?: CSSProperties;
@@ -30,21 +31,40 @@ export default function BlockchainToast({ toast, onClose, style }: ToastProps) {
       const timer = setTimeout(() => {
         onClose();
       }, toast.duration);
-      
       return () => clearTimeout(timer);
     }
   }, [toast.duration, onClose]);
 
   const isError = toast.title.includes('❌') || toast.title.includes('Failed');
-  const isWarning = !toast.txHash && !isError;
+  const toastType = toast.type || (toast.txHash ? 'blockchain' : isError ? 'error' : 'warning');
+
+  const typeClass =
+    isError ? 'toast-error'
+    : toastType === 'da' ? 'toast-da'
+    : toastType === 'compute' ? 'toast-compute'
+    : toastType === 'blockchain' ? ''
+    : 'toast-warning';
+
+  const iconClass =
+    isError ? 'icon-error'
+    : toastType === 'da' ? 'icon-da'
+    : toastType === 'compute' ? 'icon-compute'
+    : toastType === 'blockchain' ? ''
+    : 'icon-warning';
+
+  const Icon =
+    isError ? AlertCircle
+    : toastType === 'da' ? Database
+    : toastType === 'compute' ? Cpu
+    : Zap;
 
   return (
     <div
-      className={`blockchain-toast blockchain-toast-enter ${isError ? 'toast-error' : isWarning ? 'toast-warning' : ''}`}
+      className={`blockchain-toast blockchain-toast-enter ${typeClass}`}
       style={style}
     >
-      <div className={`toast-icon ${isError ? 'icon-error' : isWarning ? 'icon-warning' : ''}`}>
-        {isError ? <AlertCircle size={24} /> : <Zap size={24} />}
+      <div className={`toast-icon ${iconClass}`}>
+        <Icon size={24} />
       </div>
 
       <div className="toast-content">
@@ -54,9 +74,9 @@ export default function BlockchainToast({ toast, onClose, style }: ToastProps) {
             <X size={16} />
           </button>
         </div>
-        
+
         <p className="toast-description">{toast.description}</p>
-        
+
         {toast.txHash ? (
           <button className="toast-tx-link" onClick={handleTxClick}>
             <span className="tx-hash">
@@ -64,7 +84,7 @@ export default function BlockchainToast({ toast, onClose, style }: ToastProps) {
             </span>
             <ExternalLink size={14} />
           </button>
-        ) : isWarning ? (
+        ) : toastType === 'warning' ? (
           <div className="toast-warning-text">
             <AlertCircle size={14} />
             <span>Blockchain recording pending</span>
@@ -72,11 +92,9 @@ export default function BlockchainToast({ toast, onClose, style }: ToastProps) {
         ) : null}
       </div>
 
-      <div 
+      <div
         className="toast-progress"
-        style={{
-          animation: `progress-shrink ${toast.duration / 1000}s linear forwards`
-        }}
+        style={{ animation: `progress-shrink ${toast.duration / 1000}s linear forwards` }}
       />
     </div>
   );

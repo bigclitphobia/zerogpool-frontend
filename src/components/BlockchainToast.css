@@ -223,6 +223,72 @@
     margin-top: 0.3rem;
     width: fit-content;
   }
+
+  /* DA (Data Availability) toast — green */
+  .blockchain-toast.toast-da {
+    border-color: rgba(0, 230, 118, 0.4);
+    box-shadow:
+      0 10px 40px rgba(0, 230, 118, 0.2),
+      0 0 60px rgba(0, 230, 118, 0.08);
+  }
+
+  .blockchain-toast.toast-da::before {
+    background: linear-gradient(90deg, #00e676, #00bfae);
+  }
+
+  .toast-icon.icon-da {
+    background: linear-gradient(135deg, rgba(0, 230, 118, 0.2), rgba(0, 191, 174, 0.2));
+    border-color: rgba(0, 230, 118, 0.4);
+    color: #00e676;
+    animation: pulse-da 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-da {
+    0%, 100% { box-shadow: 0 0 10px rgba(0, 230, 118, 0.3); }
+    50%       { box-shadow: 0 0 22px rgba(0, 230, 118, 0.65); }
+  }
+
+  .blockchain-toast.toast-da .toast-header h4 {
+    color: #00e676;
+  }
+
+  .blockchain-toast.toast-da .toast-progress {
+    background: linear-gradient(90deg, #00e676, #00bfae);
+    box-shadow: 0 0 10px rgba(0, 230, 118, 0.5);
+  }
+
+  /* Compute (0G Compute / AI) toast — purple */
+  .blockchain-toast.toast-compute {
+    border-color: rgba(179, 57, 255, 0.45);
+    box-shadow:
+      0 10px 40px rgba(179, 57, 255, 0.2),
+      0 0 60px rgba(179, 57, 255, 0.08);
+  }
+
+  .blockchain-toast.toast-compute::before {
+    background: linear-gradient(90deg, #b339ff, #7c3aed);
+  }
+
+  .toast-icon.icon-compute {
+    background: linear-gradient(135deg, rgba(179, 57, 255, 0.2), rgba(124, 58, 237, 0.2));
+    border-color: rgba(179, 57, 255, 0.45);
+    color: #b339ff;
+    animation: pulse-compute 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-compute {
+    0%, 100% { box-shadow: 0 0 10px rgba(179, 57, 255, 0.3); }
+    50%       { box-shadow: 0 0 22px rgba(179, 57, 255, 0.65); }
+  }
+
+  .blockchain-toast.toast-compute .toast-header h4 {
+    color: #b339ff;
+  }
+
+  .blockchain-toast.toast-compute .toast-progress {
+    background: linear-gradient(90deg, #b339ff, #7c3aed);
+    box-shadow: 0 0 10px rgba(179, 57, 255, 0.5);
+  }
   
   @media (max-width: 768px) {
     .blockchain-toast {
