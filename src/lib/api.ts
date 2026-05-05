@@ -167,7 +167,7 @@ export type LeaderboardRow = {
 }
 
 export async function getLeaderboard(): Promise<LeaderboardRow[]> {
-  const data: any = await request('/leaderboard', { method: 'GET' })
+  const data: any = await request('/leaderboard', { method: 'GET', auth: true })
   return data?.data || []
 }
 
@@ -181,7 +181,7 @@ export async function getLeaderboardAiComment(walletAddress: string): Promise<Le
   try {
     const data: any = await request(
       `/leaderboard/ai-comment?wallet=${encodeURIComponent(walletAddress)}`,
-      { method: 'GET' },
+      { method: 'GET', auth: true },
     )
     return {
       comment: data?.comment ?? null,
@@ -205,7 +205,10 @@ export type DaSnapshot = {
 export async function getDaSnapshot(walletAddress: string): Promise<{ snapshot: DaSnapshot | null; history: DaSnapshot[] } | null> {
   if (!walletAddress) return null
   try {
-    const data: any = await request(`/da/snapshot?wallet=${encodeURIComponent(walletAddress)}`, { method: 'GET' })
+    const data: any = await request(`/da/snapshot?wallet=${encodeURIComponent(walletAddress)}`, {
+      method: 'GET',
+      auth: true,
+    })
     return { snapshot: data?.snapshot || null, history: data?.history || [] }
   } catch {
     return null
