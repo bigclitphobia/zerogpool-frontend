@@ -161,7 +161,7 @@ const ProfilePage = () => {
   // ─── Sub-components ───────────────────────────────────────────────────────────
 
   const StatTile = ({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: React.ReactNode; accent: string }) => (
-    <div className={`rounded-2xl bg-black/40 border ${accent} px-4 py-4 flex flex-col gap-2`}>
+    <div className={`rounded-2xl bg-slate-900/80 backdrop-blur-sm border ${accent} px-4 py-4 flex flex-col gap-2`}>
       <div className="flex items-center gap-2 text-white/50 text-[10px] font-bold uppercase tracking-widest">
         <span className="text-base leading-none">{icon}</span>
         {label}
@@ -190,7 +190,7 @@ const ProfilePage = () => {
             { label: 'Recorded', value: <><div className="font-bold text-sm">{dateStr}</div>{timeStr && <div className="text-white/40 text-[10px]">{timeStr}</div>}</> },
             { label: 'Balls on-chain', value: chainSession.stats?.totalBallsPocketed ?? '—' },
           ].map((item, i) => (
-            <div key={i} className="rounded-xl bg-white/5 px-3 py-2">
+            <div key={i} className="rounded-xl bg-white/10 px-3 py-2">
               <div className="text-[10px] text-white/35 uppercase tracking-wide mb-1">{item.label}</div>
               <div className="text-white font-extrabold text-lg leading-none">{item.value}</div>
             </div>
@@ -286,7 +286,7 @@ const ProfilePage = () => {
                 accent: 'border-teal-500/25',
               },
             ].map(({ label, value, sub, accent }) => (
-              <div key={label} className={`rounded-2xl bg-black/40 border ${accent} px-4 py-3 flex flex-col gap-1`}>
+              <div key={label} className={`rounded-2xl bg-slate-900/80 backdrop-blur-sm border ${accent} px-4 py-3 flex flex-col gap-1`}>
                 <div className="text-[10px] font-bold text-white/35 tracking-widest uppercase">{label}</div>
                 <div className="text-white font-extrabold text-xl sm:text-2xl leading-none">{value}</div>
                 <div className="text-[10px] text-white/30">{sub}</div>
@@ -302,7 +302,7 @@ const ProfilePage = () => {
           <div className="md:col-span-3 space-y-4">
 
             {/* Player Intelligence */}
-            <div className="rounded-2xl bg-black/40 border border-white/10 p-5">
+            <div className="rounded-2xl bg-slate-900/80 backdrop-blur-sm border border-white/15 p-5">
               <SectionLabel>Player Intelligence · 0G DA</SectionLabel>
               {intel ? (
                 <div className="flex flex-wrap gap-2">
@@ -320,7 +320,7 @@ const ProfilePage = () => {
             </div>
 
             {/* On-Chain Session */}
-            <div className="rounded-2xl bg-black/40 border border-emerald-500/20 p-5">
+            <div className="rounded-2xl bg-slate-900/80 backdrop-blur-sm border border-emerald-500/35 p-5">
               <div className="flex items-center justify-between mb-3">
                 <SectionLabel>On-Chain Session · 0G EVM</SectionLabel>
                 {chainLoaded && chainSession && (
@@ -333,7 +333,7 @@ const ProfilePage = () => {
             </div>
 
             {/* Inline Chain History */}
-            <div className="rounded-2xl bg-black/40 border border-emerald-400/20 p-5">
+            <div className="rounded-2xl bg-slate-900/80 backdrop-blur-sm border border-emerald-400/35 p-5">
               <div className="flex items-center justify-between mb-3">
                 <SectionLabel>On-Chain Login History · 0G EVM</SectionLabel>
                 {chainHistory.length > 0 && (
@@ -353,7 +353,7 @@ const ProfilePage = () => {
                     const dateStr = ts ? ts.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'
                     const timeStr = ts ? ts.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''
                     return (
-                      <div key={s.txHash} className="rounded-xl bg-white/5 border border-white/8 px-3 py-2.5 flex items-center gap-3">
+                      <div key={s.txHash} className="rounded-xl bg-white/10 border border-white/15 px-3 py-2.5 flex items-center gap-3">
                         <div className="shrink-0 text-center min-w-[36px]">
                           <div className="text-white font-extrabold text-sm leading-none">#{s.loginCount}</div>
                           <div className="text-white/30 text-[9px] mt-0.5">{dateStr}</div>
@@ -392,7 +392,7 @@ const ProfilePage = () => {
 
             {/* DA Proof status */}
             {memory?.skillEvents?.length > 0 && (
-              <div className="rounded-2xl bg-black/40 border border-white/10 p-5">
+              <div className="rounded-2xl bg-slate-900/80 backdrop-blur-sm border border-white/15 p-5">
                 <SectionLabel>Recent DA Events · 0G DA</SectionLabel>
                 <div className="space-y-1.5">
                   {memory.skillEvents.slice(0, 5).map((e: any, i: number) => (
@@ -412,7 +412,7 @@ const ProfilePage = () => {
           <div className="md:col-span-2 space-y-4">
 
             {/* AI Insights panel */}
-            <div className="rounded-2xl bg-black/40 border border-cyan-500/20 p-5">
+            <div className="rounded-2xl bg-slate-900/80 backdrop-blur-sm border border-cyan-500/35 p-5">
               <SectionLabel>AI Insights · 0G Compute TEE</SectionLabel>
 
               {!aiLoaded && (
@@ -470,7 +470,7 @@ const ProfilePage = () => {
             </div>
 
             {/* 0G Contract info */}
-            <div className="rounded-2xl bg-black/40 border border-white/8 p-5">
+            <div className="rounded-2xl bg-slate-900/80 backdrop-blur-sm border border-white/15 p-5">
               <SectionLabel>0G Network</SectionLabel>
               <div className="space-y-2 text-xs">
                 {[
