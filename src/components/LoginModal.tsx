@@ -12,8 +12,6 @@ import {
 import zeroGLogo from '../assets/OG.png'
 import kultGameLogo from '../assets/kultLogo.png'
 import MyLogo from '../assets/logo.png'
-import NetworkModal from './NetworkModal'
-import { getAllowedChainFromEnv } from '../lib/chain'
 import { clearClientAuthSession } from '../lib/api'
 
 /* ============================== Helpers ============================== */
@@ -450,66 +448,6 @@ export default function LoginModal({
     onError: (err: any) => setError((err?.message ?? err?.code ?? String(err)) || 'Email login error'),
   })
 
-  // Network gating state
-  const [networkOpen, setNetworkOpen] = useState(false)
-  const allowedChain = getAllowedChainFromEnv() || {
-    caip2: 'eip155:16661',
-    decimalChainId: 16661,
-    hexChainId: '0x4115',
-    chainName: '0G Mainnet',
-    rpcUrls: ['https://evmrpc.0g.ai'],
-    blockExplorerUrls: ['https://chainscan.0g.ai'],
-  }
-
-  const preflightEnsureAllowedNetwork = async (onAllowed: () => Promise<void> | void) => {
-    try {
-      // Important: before wallet auth, do NOT touch window.ethereum.
-      // Privy's proxy provider (evmAsk.js) may throw `selectExtension` errors
-      // if no extension has been selected yet.
-      if (!authenticated) {
-        await onAllowed()
-        return
-      }
-
-      const eth = (window as any).ethereum
-      // Only query eth_chainId on a real wallet extension.
-      // Privy registers its own proxy as window.ethereum (evmAsk.js) which calls
-      // selectExtension() on any RPC request and throws "Unexpected error" when no
-      // extension is installed. Real extensions always have isMetaMask, isCoinbaseWallet,
-      // or similar brand flags.
-      const isRealExtension =
-        eth?.isMetaMask ||
-        eth?.isCoinbaseWallet ||
-        eth?.isPhantom ||
-        eth?.isOkxWallet ||
-        eth?.isBitKeep ||
-        eth?.isRainbow
-      if (!eth?.request || !isRealExtension) {
-        await onAllowed()
-        return
-      }
-      const current = await eth.request({ method: 'eth_chainId' }).catch((err: any) => {
-        const msg = String(err?.message || err || '')
-        if (msg.toLowerCase().includes('selectextension') || msg.toLowerCase().includes('unexpected error')) {
-          return undefined
-        }
-        throw err
-      })
-      if (typeof current === 'string' && current.toLowerCase() !== allowedChain.hexChainId.toLowerCase()) {
-        setNetworkOpen(true)
-        return
-      }
-      await onAllowed()
-    } catch (err: any) {
-      const msg = String(err?.message || err || '')
-      if (msg.toLowerCase().includes('selectextension') || msg.toLowerCase().includes('unexpected error')) {
-        await onAllowed()
-        return
-      }
-      setNetworkOpen(true)
-    }
-  }
-
   // Create embedded wallet with our own UI (no Privy modal UI)
   const handleCreateEmbeddedWallet = async () => {
     setError('')
@@ -705,11 +643,9 @@ export default function LoginModal({
                         className="w-full inline-flex items-center justify-center rounded-2xl border border-emerald-400/50 bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-500 px-4 py-3 text-lg font-bold text-white shadow-[0_10px_28px_rgba(16,185,129,0.35)] hover:shadow-[0_14px_34px_rgba(16,185,129,0.45)] active:scale-[.99] transition disabled:opacity-60"
                         onClick={() => {
                           if (emailStep === 'enter-code') return
-                          preflightEnsureAllowedNetwork(async () => {
-                            setError('')
-                            try { if (dialogRef.current?.open) dialogRef.current.close() } catch {}
-                            login({ loginMethods: ['wallet'] })
-                          })
+                          setError('')
+                          try { if (dialogRef.current?.open) dialogRef.current.close() } catch {}
+                          login({ loginMethods: ['wallet'] })
                         }}
                         disabled={emailStep === 'enter-code'}
                       >
@@ -730,11 +666,7 @@ export default function LoginModal({
                     </>
                   ) : (
                     <WalletPickerScrollable
-                      connectWith={(w) => {
-                        preflightEnsureAllowedNetwork(() => {
-                          connectWith(w)
-                        })
-                      }}
+                      connectWith={(w) => { connectWith(w) }}
                       onBack={() => setWalletMode(false)}
                     />
                   )}
@@ -744,13 +676,6 @@ export default function LoginModal({
           )}
         </div>
       </div>
-      <NetworkModal
-        open={networkOpen}
-        onClose={() => setNetworkOpen(false)}
-        onSwitched={() => {
-          setNetworkOpen(false)
-        }}
-      />
     </dialog>
   )
 }

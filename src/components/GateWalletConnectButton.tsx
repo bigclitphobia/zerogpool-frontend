@@ -3,47 +3,19 @@ import { loginWithWallet } from '../lib/api'
 import { useBlockchainToast } from '../context/BlockchainToastContext'
 import {
   connectGateWallet,
-  getGateWalletCurrentNetwork,
   getPrimaryGateWalletAddress,
   isGateWalletAvailable,
-  type NetworkInfo,
 } from '../lib/gateWallet'
 
 type Props = {
   onConnected?: (address: string) => void
   onError?: (message: string) => void
-  onNetworkMismatch?: () => void
   disabled?: boolean
-}
-
-const allowedChain = {
-  caip2: 'eip155:16661',
-  decimalChainId: 16661,
-  hexChainId: '0x4115',
-  chainName: '0G Mainnet',
-  rpcUrls: ['https://evmrpc.0g.ai'],
-  blockExplorerUrls: ['https://chainscan.0g.ai'],
-}
-
-function normalizeChainId(chainId?: string) {
-  if (!chainId) return undefined
-  if (chainId.startsWith('0x')) {
-    const parsed = Number.parseInt(chainId, 16)
-    return Number.isFinite(parsed) ? String(parsed) : chainId
-  }
-  return chainId
-}
-
-function getNetworkLabel(network: NetworkInfo | null | undefined) {
-  if (network === null) return 'All Networks'
-  if (!network) return 'Unknown'
-  return network.name || network.chainId
 }
 
 export default function GateWalletConnectButton({
   onConnected,
   onError,
-  onNetworkMismatch,
   disabled,
 }: Props) {
   const [connecting, setConnecting] = useState(false)
@@ -62,24 +34,9 @@ export default function GateWalletConnectButton({
       if (!address) {
         throw new Error('Gate Wallet did not return an address.')
       }
-      const network = await getGateWalletCurrentNetwork().catch(() => undefined)
-      if (network === undefined) {
-        throw new Error('Gate Wallet network check is unavailable. Only 0G Mainnet is supported.')
-      }
-      if (network === null) {
-        throw new Error('Gate Wallet is set to All Networks. Select 0G Mainnet and try again.')
-      }
-      const normalized = normalizeChainId(network.chainId)
-      const allowed = String(allowedChain.decimalChainId)
-      if (!normalized || normalized !== allowed) {
-        onNetworkMismatch?.()
-        throw new Error(
-          `Gate Wallet is on ${getNetworkLabel(network)}. Switch to ${allowedChain.chainName}.`
-        )
-      }
-      
+
       const loginResult = await loginWithWallet(address)
-      
+
       if (loginResult?.blockchain?.txHash) {
         showToast({
           title: '🎮 Login Successful',
@@ -88,7 +45,7 @@ export default function GateWalletConnectButton({
           duration: 6000
         })
       }
-      
+
       onConnected?.(address)
     } catch (err: any) {
       onError?.(err?.message || 'Failed to connect Gate Wallet.')
