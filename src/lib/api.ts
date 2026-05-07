@@ -215,6 +215,59 @@ export async function getDaSnapshot(walletAddress: string): Promise<{ snapshot: 
   }
 }
 
+// On-chain session (0G EVM session contract)
+export async function getBlockchainSession(walletAddress: string): Promise<any> {
+  if (!walletAddress) return null
+  const data: any = await request(`/blockchain/session/${encodeURIComponent(walletAddress.toLowerCase())}`, {
+    method: 'GET',
+    auth: true,
+  })
+  return data?.data || null
+}
+
+// Player memory & intelligence (0G DA — no rate limit)
+export async function getPlayerMemory(walletAddress: string): Promise<any> {
+  if (!walletAddress) return null
+  try {
+    const data: any = await request(`/0g/player-memory/${encodeURIComponent(walletAddress.toLowerCase())}`, {
+      method: 'GET',
+    })
+    return data
+  } catch {
+    return null
+  }
+}
+
+// Player difficulty recommendation (rate-limited 0G Compute)
+export async function getPlayerDifficulty(walletAddress: string): Promise<any> {
+  if (!walletAddress) return null
+  const data: any = await request(`/player/difficulty?wallet=${encodeURIComponent(walletAddress.toLowerCase())}`, {
+    method: 'GET',
+    auth: true,
+  })
+  return data
+}
+
+// Player coaching tips (rate-limited 0G Compute)
+export async function getPlayerCoaching(walletAddress: string): Promise<any> {
+  if (!walletAddress) return null
+  const data: any = await request(`/player/coaching?wallet=${encodeURIComponent(walletAddress.toLowerCase())}`, {
+    method: 'GET',
+    auth: true,
+  })
+  return data
+}
+
+// Player performance insight (rate-limited 0G Compute)
+export async function getPlayerInsight(walletAddress: string, rank = 1): Promise<any> {
+  if (!walletAddress) return null
+  const data: any = await request(
+    `/player/insight?wallet=${encodeURIComponent(walletAddress.toLowerCase())}&rank=${rank}`,
+    { method: 'GET', auth: true },
+  )
+  return data
+}
+
 // Referral system
 export const generateReferralCode = async (
   walletAddress: string,
@@ -245,5 +298,10 @@ export const API = {
   getLeaderboard,
   getLeaderboardAiComment,
   getDaSnapshot,
+  getBlockchainSession,
+  getPlayerMemory,
+  getPlayerDifficulty,
+  getPlayerCoaching,
+  getPlayerInsight,
   generateReferralCode,
 }

@@ -185,9 +185,21 @@ const Layout: React.FC = () => {
         )}
       </header>
 
-      <main className="flex-1 flex flex-col p-0 min-h-0"> 
+      <main className="flex-1 flex flex-col p-0 min-h-0">
         <Outlet />
       </main>
+
+      <footer className="shrink-0 py-2 px-4 flex items-center justify-center">
+        <a
+          href="https://chainscan.0g.ai/address/0x3Cf93517c30D9C6078C7A16454bd482908619523"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-[10px] font-mono text-white/25 hover:text-white/50 transition-colors"
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/60 inline-block" />
+          Contract: 0x3Cf9…9523 · 0G EVM ↗
+        </a>
+      </footer>
 
       <LoginModal open={showLogin || needsWallet} onClose={() => setShowLogin(false)} />
     </div>
