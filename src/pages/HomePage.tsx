@@ -63,7 +63,12 @@ export default function HomePage() {
   // NEW: Handle Privy wallet login and show toast
   useEffect(() => {
     if (!authenticated || !connectedAddress || hasShownLoginToast) return
-    
+    // Already have a JWT — this is a page refresh, not a new login. Skip.
+    if (getToken()) {
+      setHasShownLoginToast(true)
+      return
+    }
+
     const handlePrivyLogin = async () => {
       try {
         const loginResult = await loginWithWallet(connectedAddress)
