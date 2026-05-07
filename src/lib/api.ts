@@ -82,6 +82,16 @@ async function request<T = any>(path: string, opts: RequestOptions = {}): Promis
 
   const res = await fetch(`${API_BASE}${path}`, { ...opts, headers })
   const data = await res.json().catch(() => ({}))
+
+  // Token expired or invalid — clear it and redirect to home so the user re-authenticates
+  if (res.status === 401 && opts.auth) {
+    setToken(null)
+    if (typeof window !== 'undefined' && !window.location.pathname.endsWith('/')) {
+      window.location.href = '/'
+    }
+    throw new Error('Session expired. Please log in again.')
+  }
+
   if (!res.ok || data?.success === false) {
     const err = (data && (data.error || data.message)) || res.statusText
     throw new Error(typeof err === 'string' ? err : 'Request failed')
