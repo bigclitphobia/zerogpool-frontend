@@ -7,7 +7,7 @@ import connectWalletImg from '../assets/connectWallet.png'
 import gameMannual from '../assets/gameMannual.png'
 import LoginModal from '../components/LoginModal'
 import ReferralModal from '../components/ReferralModal'
-import { getPlayerData, getToken, getWalletAddress, getDaSnapshot } from '../lib/api'
+import { getPlayerData, getToken, getWalletAddress, getDaSnapshot, getTokenWalletAddress, setToken } from '../lib/api'
 import { getJwtFromUrl } from '../lib/session'
 import rulesIcon from '../assets/rulesIcon.png';
 import leaderboardBtnIcon from '../assets/leaderboard.png';
@@ -63,8 +63,12 @@ export default function HomePage() {
   // NEW: Handle Privy wallet login and show toast
   useEffect(() => {
     if (!authenticated || !connectedAddress || hasShownLoginToast) return
-    // Already have a JWT — this is a page refresh, not a new login. Skip.
-    if (getToken()) {
+    // If a token exists for a different wallet, clear it so we get a fresh one
+    const tokenWallet = getTokenWalletAddress()
+    if (tokenWallet && tokenWallet !== connectedAddress.toLowerCase()) {
+      setToken(null)
+    } else if (getToken()) {
+      // Same wallet — this is just a page refresh, skip re-login
       setHasShownLoginToast(true)
       return
     }

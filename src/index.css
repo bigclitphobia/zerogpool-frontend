@@ -20,6 +20,18 @@
   box-shadow: inset 0 0 0 2px rgba(255,255,255,0.26);
 }
 
+/* Profile page scrollbar — matches logout button gradient (blue-500 → cyan-400) */
+.profile-scroll { scrollbar-width: thin; scrollbar-color: #3b82f6 transparent; }
+.profile-scroll::-webkit-scrollbar { width: 6px; }
+.profile-scroll::-webkit-scrollbar-track { background: transparent; }
+.profile-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #3b82f6, #22d3ee);
+  border-radius: 9999px;
+}
+.profile-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #60a5fa, #67e8f9);
+}
+
 /* Dim page background when <dialog> is open */
 @layer base {
   dialog::backdrop {

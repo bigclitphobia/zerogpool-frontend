@@ -5,6 +5,7 @@ import LeaderboardPage from './pages/LeaderboardPage'
 import HomePage from './pages/HomePage'
 import GamePage from './pages/GamePage'
 import ProfilePage from './pages/ProfilePage'
+import ChainHistoryPage from './pages/ChainHistoryPage'
 import Layout from './components/Layout'
 import NFTPage from './pages/NFTPage'
 import PaidNFTPage from './pages/paidNFTPage'
@@ -22,6 +23,7 @@ function App() {
           <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
           <Route path="/game" element={<ProtectedRoute><GamePage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/chain-history" element={<ProtectedRoute><ChainHistoryPage /></ProtectedRoute>} />
           <Route path="/nft1" element={<ProtectedRoute><NFTPage/></ProtectedRoute>} />
           <Route path="/nft2" element={<ProtectedRoute><PaidNFTPage/></ProtectedRoute>} /> 
           <Route path="*" element={<Navigate to="/" replace />} />

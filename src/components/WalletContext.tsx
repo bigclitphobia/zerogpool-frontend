@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type React from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
-import { loginWithWallet, setToken, getToken } from '../lib/api'
+import { loginWithWallet, setToken, getToken, getTokenWalletAddress } from '../lib/api'
 
 type WalletContextType = {
   isConnected: boolean
@@ -38,11 +38,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const address = user?.wallet?.address || wallets.find((w) => !!w.address)?.address
     if (!address) return
     if (backendLoginSent.current === address) return
-    if (getToken()) {
-      backendLoginSent.current = address
+    backendLoginSent.current = address
+
+    // If a token exists but belongs to a different wallet, clear it so we re-login
+    const tokenWallet = getTokenWalletAddress()
+    if (tokenWallet && tokenWallet !== address.toLowerCase()) {
+      setToken(null)
+    } else if (getToken()) {
       return
     }
-    backendLoginSent.current = address
 
     loginWithWallet(address).catch((err) => {
       // Network errors are non-fatal to the app; log for debugging

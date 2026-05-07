@@ -53,6 +53,18 @@ export function clearClientAuthSession() {
   }
 }
 
+/** Decode the wallet address embedded in the stored JWT without verifying the signature. */
+export function getTokenWalletAddress(): string | null {
+  try {
+    const token = getToken()
+    if (!token) return null
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return (payload.walletAddress as string)?.toLowerCase() || null
+  } catch {
+    return null
+  }
+}
+
 type RequestOptions = RequestInit & { auth?: boolean }
 
 async function request<T = any>(path: string, opts: RequestOptions = {}): Promise<T> {
@@ -223,6 +235,34 @@ export async function getBlockchainSession(walletAddress: string): Promise<any> 
     auth: true,
   })
   return data?.data || null
+}
+
+// Full on-chain login history from SessionRecorded events
+export async function getBlockchainHistory(walletAddress: string): Promise<any[]> {
+  if (!walletAddress) return []
+  try {
+    const data: any = await request(`/blockchain/history/${encodeURIComponent(walletAddress.toLowerCase())}`, {
+      method: 'GET',
+      auth: true,
+    })
+    return data?.data || []
+  } catch {
+    return []
+  }
+}
+
+// On-chain login count
+export async function getBlockchainLoginCount(walletAddress: string): Promise<number | null> {
+  if (!walletAddress) return null
+  try {
+    const data: any = await request(`/blockchain/login-count/${encodeURIComponent(walletAddress.toLowerCase())}`, {
+      method: 'GET',
+      auth: true,
+    })
+    return data?.data?.onChainLoginCount ?? null
+  } catch {
+    return null
+  }
 }
 
 // Player memory & intelligence (0G DA — no rate limit)
