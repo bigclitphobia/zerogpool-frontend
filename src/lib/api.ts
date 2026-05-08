@@ -99,6 +99,22 @@ async function request<T = any>(path: string, opts: RequestOptions = {}): Promis
   return data
 }
 
+// SIWE auth
+export async function getSiweNonce(address: string): Promise<string> {
+  const data: any = await request(`/auth/nonce?address=${encodeURIComponent(address)}`, { method: 'GET' })
+  return data?.nonce as string
+}
+
+export async function loginWithSiwe(message: string, signature: string): Promise<{ token: string; walletAddress: string } | null> {
+  const body = JSON.stringify({ message, signature })
+  const data: any = await request('/auth/siwe-login', { method: 'POST', body })
+  const token = data?.data?.token
+  const walletAddress = data?.data?.walletAddress
+  if (walletAddress) setWalletAddress(walletAddress)
+  if (token) setToken(token)
+  return token ? { token, walletAddress } : null
+}
+
 // Auth - NOW RETURNS BLOCKCHAIN DATA
 export async function loginWithWallet(walletAddress: string): Promise<{ 
   token: string;

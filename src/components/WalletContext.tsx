@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type React from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
-import { loginWithWallet, setToken, getToken, getTokenWalletAddress } from '../lib/api'
+import { SiweMessage } from 'siwe'
+import { getSiweNonce, loginWithSiwe, setToken, getToken, getTokenWalletAddress } from '../lib/api'
 
 type WalletContextType = {
   isConnected: boolean
@@ -32,15 +33,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (ready) setIsConnected(authenticated)
   }, [ready, authenticated])
 
-  // On login, call backend with wallet address and store JWT
+  // On login, perform SIWE flow with the connected wallet
   useEffect(() => {
     if (!ready || !authenticated) return
-    const address = user?.wallet?.address || wallets.find((w) => !!w.address)?.address
+    const wallet = wallets.find((w) => !!w.address) || (user?.wallet?.address ? { address: user.wallet.address, getEthereumProvider: null } : null)
+    const address = (wallet as any)?.address
     if (!address) return
     if (backendLoginSent.current === address) return
     backendLoginSent.current = address
 
-    // If a token exists but belongs to a different wallet, clear it so we re-login
     const tokenWallet = getTokenWalletAddress()
     if (tokenWallet && tokenWallet !== address.toLowerCase()) {
       setToken(null)
@@ -48,12 +49,36 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return
     }
 
-    loginWithWallet(address).catch((err) => {
-      // Network errors are non-fatal to the app; log for debugging
-      console.warn('Backend login call failed:', err)
-      // ensure no stale token on failure
-      setToken(null)
-    })
+    const privyWallet = wallets.find((w) => w.address === address)
+    if (!privyWallet) {
+      console.warn('No Privy wallet object found for SIWE signing')
+      return
+    }
+
+    ;(async () => {
+      try {
+        const nonce = await getSiweNonce(address)
+        const siweMessage = new SiweMessage({
+          domain: window.location.host,
+          address,
+          statement: 'Sign in to ZeroG Pool',
+          uri: window.location.origin,
+          version: '1',
+          chainId: 1,
+          nonce,
+        })
+        const messageText = siweMessage.prepareMessage()
+        const provider = await privyWallet.getEthereumProvider()
+        const signature = await provider.request({
+          method: 'personal_sign',
+          params: [messageText, address],
+        })
+        await loginWithSiwe(messageText, signature as string)
+      } catch (err: unknown) {
+        console.warn('SIWE login failed:', err)
+        setToken(null)
+      }
+    })()
   }, [ready, authenticated, user, wallets])
 
   const value = useMemo(
