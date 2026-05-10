@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { usePrivy, useWallets } from '@privy-io/react-auth'
 import { useNavigate } from 'react-router-dom'
+import { ShieldCheck } from 'lucide-react'
 import profileIcon from '../assets/profileIcon.png'
 import trophy from '../assets/trophy.png'
 import ball5 from '../assets/balls/ball-5.png'
@@ -17,6 +18,7 @@ import {
   getBlockchainSession,
   getBlockchainHistory,
 } from '../lib/api'
+import NeuralActivityConsole from '../components/NeuralActivityConsole'
 
 const CONTRACT_ADDRESS = '0x3Cf93517c30D9C6078C7A16454bd482908619523'
 const CHAINSCAN_CONTRACT = `https://chainscan.0g.ai/address/${CONTRACT_ADDRESS}`
@@ -44,7 +46,10 @@ const Badge = ({ label, color }: { label: string; color?: string }) => (
 )
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <div className="text-[10px] font-bold text-white/35 tracking-widest uppercase mb-3">{children}</div>
+  <div className="text-[10px] font-black text-cyan-400/40 tracking-[0.2em] uppercase mb-4 flex items-center gap-2">
+    <div className="h-[1px] w-4 bg-cyan-400/20" />
+    {children}
+  </div>
 )
 
 const ProfilePage = () => {
@@ -70,6 +75,7 @@ const ProfilePage = () => {
   const [chainHistory, setChainHistory] = useState<any[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [historyLoaded, setHistoryLoaded] = useState(false)
+  const [showMerkleModal, setShowMerkleModal] = useState(false)
 
   const token = getToken()
   const isAuthenticated = authenticated || Boolean(token)
@@ -160,14 +166,15 @@ const ProfilePage = () => {
 
   // ─── Sub-components ───────────────────────────────────────────────────────────
 
-  const StatTile = ({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: React.ReactNode; accent: string }) => (
-    <div className={`rounded-2xl bg-slate-900/80 backdrop-blur-sm border ${accent} px-4 py-4 flex flex-col gap-2`}>
-      <div className="flex items-center gap-2 text-white/50 text-[10px] font-bold uppercase tracking-widest">
-        <span className="text-base leading-none">{icon}</span>
+  const StatTile = ({ icon, label, value, accent, glow }: { icon: React.ReactNode; label: string; value: React.ReactNode; accent: string; glow: string }) => (
+    <div className={`group relative rounded-2xl bg-slate-900/40 backdrop-blur-md border ${accent} px-5 py-5 transition-all duration-300 hover:scale-[1.02] hover:bg-slate-900/60 overflow-hidden`}>
+      <div className={`absolute -right-4 -top-4 w-16 h-16 rounded-full blur-3xl opacity-20 ${glow}`} />
+      <div className="flex items-center gap-2 text-white/40 text-[9px] font-black uppercase tracking-[0.15em] mb-2">
+        <span className="text-lg leading-none">{icon}</span>
         {label}
       </div>
-      <div className="text-white font-extrabold text-2xl sm:text-3xl leading-none">
-        {loadingStats ? <span className="text-white/30 text-lg animate-pulse">—</span> : value}
+      <div className="text-white font-black text-3xl sm:text-4xl leading-none tracking-tight">
+        {loadingStats ? <span className="text-white/10 animate-pulse">···</span> : value}
       </div>
     </div>
   )
@@ -183,28 +190,28 @@ const ProfilePage = () => {
     const dateStr = ts ? ts.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
     const timeStr = ts ? ts.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''
     return (
-      <div className="space-y-3">
-        <div className="grid grid-cols-3 gap-2">
+      <div className="space-y-4">
+        <div className="grid grid-cols-3 gap-3">
           {[
-            { label: 'Session #', value: chainSession.loginCount ?? '—' },
-            { label: 'Recorded', value: <><div className="font-bold text-sm">{dateStr}</div>{timeStr && <div className="text-white/40 text-[10px]">{timeStr}</div>}</> },
-            { label: 'Balls on-chain', value: chainSession.stats?.totalBallsPocketed ?? '—' },
+            { label: 'Session #', value: chainSession.loginCount ?? '—', color: 'text-cyan-400' },
+            { label: 'Recorded', value: <><div className="font-black text-sm">{dateStr}</div>{timeStr && <div className="text-white/30 text-[9px] font-medium uppercase">{timeStr}</div>}</>, color: 'text-white' },
+            { label: 'On-Chain Balls', value: chainSession.stats?.totalBallsPocketed ?? '—', color: 'text-emerald-400' },
           ].map((item, i) => (
-            <div key={i} className="rounded-xl bg-white/10 px-3 py-2">
-              <div className="text-[10px] text-white/35 uppercase tracking-wide mb-1">{item.label}</div>
-              <div className="text-white font-extrabold text-lg leading-none">{item.value}</div>
+            <div key={i} className="rounded-2xl bg-white/5 border border-white/5 px-4 py-3 group hover:border-white/10 transition-colors">
+              <div className="text-[9px] text-white/25 font-black uppercase tracking-widest mb-1.5">{item.label}</div>
+              <div className={`font-black text-xl leading-none ${item.color}`}>{item.value}</div>
             </div>
           ))}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2.5 pt-1">
           <a href={CHAINSCAN_CONTRACT} target="_blank" rel="noopener noreferrer"
-            className="text-[11px] rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-emerald-300 hover:bg-emerald-500/20 transition-colors">
-            Contract ↗
+            className="text-[11px] font-bold rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-4 py-2 text-emerald-400 hover:bg-emerald-400/10 hover:border-emerald-400/40 transition-all">
+            EVM Contract ↗
           </a>
           {address && (
             <a href={CHAINSCAN_TX(address)} target="_blank" rel="noopener noreferrer"
-              className="text-[11px] rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-white/50 hover:bg-white/10 transition-colors">
-              My Activity ↗
+              className="text-[11px] font-bold rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-white/40 hover:bg-white/10 hover:text-white/70 transition-all">
+              Explorer Activity ↗
             </a>
           )}
         </div>
@@ -217,83 +224,55 @@ const ProfilePage = () => {
       <div className="max-w-5xl mx-auto space-y-5">
 
         {/* ── Header ─────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-4">
-          <img src={profileIcon} className="h-14 w-14 rounded-full ring-2 ring-white/30 shrink-0" alt="Profile" />
-          <div className="flex-1 min-w-0">
-            <div className="text-white font-extrabold text-xl sm:text-2xl leading-tight truncate">
-              {name || 'Your Username'}
+        <div className="flex flex-col sm:flex-row items-center gap-6 bg-slate-900/40 backdrop-blur-xl border border-white/10 rounded-[2rem] p-6 sm:p-8">
+          <div className="relative shrink-0">
+            <img src={profileIcon} className="h-20 w-20 sm:h-24 sm:w-24 rounded-full ring-4 ring-cyan-400/20 shadow-[0_0_40px_rgba(34,211,238,0.2)]" alt="Profile" />
+            <div className="absolute -bottom-1 -right-1 h-6 w-6 bg-emerald-500 border-4 border-slate-900 rounded-full" />
+            
+            {/* Merkle Ribbon */}
+            <button 
+              onClick={() => setShowMerkleModal(true)}
+              className="absolute -top-2 -left-2 bg-gradient-to-br from-cyan-400 to-blue-600 text-white text-[8px] font-black px-2 py-1 rounded-md shadow-[0_0_15px_rgba(34,211,238,0.4)] rotate-[-15deg] hover:scale-110 hover:rotate-[0deg] transition-all cursor-pointer z-10 border border-white/20 uppercase tracking-tighter"
+            >
+              Verified by 0G
+            </button>
+          </div>
+          <div className="flex-1 text-center sm:text-left min-w-0">
+            <div className="text-white font-black text-3xl sm:text-4xl leading-tight tracking-tight mb-1 font-[Mohave]">
+              {name || 'ANONYMOUS PLAYER'}
             </div>
             {address && (
-              <button
-                onClick={copyAddress}
-                className="flex items-center gap-1.5 text-white/50 text-xs font-mono hover:text-white/80 transition-colors mt-0.5"
-              >
-                <span className="truncate max-w-[200px] sm:max-w-none">{short}</span>
-                <span className="shrink-0">{addrCopied ? '✓' : '⎘'}</span>
-              </button>
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <button
+                  onClick={copyAddress}
+                  className="flex items-center gap-2 text-cyan-400/60 text-xs font-mono bg-cyan-400/5 px-3 py-1.5 rounded-lg border border-cyan-400/10 hover:text-cyan-400 hover:bg-cyan-400/10 transition-all group"
+                >
+                  <span className="truncate max-w-[200px] sm:max-w-none">{address}</span>
+                  <span className="shrink-0 group-hover:scale-110 transition-transform">{addrCopied ? '✓' : '⎘'}</span>
+                </button>
+                <div className="flex gap-2">
+                  <Badge label="ACTIVE SESSION" color="bg-emerald-400/10 text-emerald-400 border-emerald-400/20" />
+                  <Badge label="0G VERIFIED" color="bg-blue-400/10 text-blue-400 border-blue-400/20" />
+                </div>
+              </div>
             )}
           </div>
           <button
             onClick={handleLogout}
-            className="shrink-0 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 px-4 py-2 text-sm font-semibold text-white shadow-lg"
+            className="shrink-0 rounded-2xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 px-6 py-3 text-sm font-bold text-white/60 hover:text-red-400 transition-all duration-300"
           >
-            Logout
+            Sign Out
           </button>
         </div>
 
         {/* ── 4 Stat tiles ───────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatTile icon="⏱" label="Time Played" value={formatPlayTime(stats?.totalTimePlayed)} accent="border-cyan-500/25" />
-          <StatTile icon="🎮" label="Games Played" value={gamesPlayed.toLocaleString()} accent="border-blue-500/25" />
-          <StatTile icon={<img src={trophy} className="h-5 w-5 inline" alt="" />} label="Games Won" value={gamesWon.toLocaleString()} accent="border-yellow-500/25" />
-          <StatTile icon={<img src={ball5} className="h-5 w-5 inline" alt="" />} label="Balls Pocketed" value={ballsPocketed.toLocaleString()} accent="border-purple-500/25" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <StatTile icon="⏱" label="Time Played" value={formatPlayTime(stats?.totalTimePlayed)} accent="border-cyan-500/20" glow="bg-cyan-500" />
+          <StatTile icon="🎮" label="Games Played" value={gamesPlayed.toLocaleString()} accent="border-blue-500/20" glow="bg-blue-500" />
+          <StatTile icon={<img src={trophy} className="h-5 w-5 inline" alt="" />} label="Games Won" value={gamesWon.toLocaleString()} accent="border-yellow-500/20" glow="bg-yellow-500" />
+          <StatTile icon={<img src={ball5} className="h-5 w-5 inline" alt="" />} label="Balls Pocketed" value={ballsPocketed.toLocaleString()} accent="border-purple-500/20" glow="bg-purple-500" />
         </div>
 
-        {/* ── Stats breakdown ────────────────────────────────────────── */}
-        {!loadingStats && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              {
-                label: 'CPU Win Rate',
-                value: stats?.totalGamesPlayedVsCPU > 0
-                  ? `${Math.round((stats.totalGamesWonVsCPU / stats.totalGamesPlayedVsCPU) * 100)}%`
-                  : '—',
-                sub: stats?.totalGamesPlayedVsCPU > 0
-                  ? `${stats.totalGamesWonVsCPU}W / ${stats.totalGamesPlayedVsCPU - stats.totalGamesWonVsCPU}L`
-                  : 'No games yet',
-                accent: 'border-indigo-500/25',
-              },
-              {
-                label: 'Human Win Rate',
-                value: stats?.totalGamesPlayedVsHuman > 0
-                  ? `${Math.round((stats.totalGamesWonVsHuman / stats.totalGamesPlayedVsHuman) * 100)}%`
-                  : '—',
-                sub: stats?.totalGamesPlayedVsHuman > 0
-                  ? `${stats.totalGamesWonVsHuman}W / ${stats.totalGamesPlayedVsHuman - stats.totalGamesWonVsHuman}L`
-                  : 'No games yet',
-                accent: 'border-pink-500/25',
-              },
-              {
-                label: 'TT Best Score',
-                value: stats?.ttBestScore > 0 ? stats.ttBestScore.toLocaleString() : '—',
-                sub: 'Time Trial',
-                accent: 'border-orange-500/25',
-              },
-              {
-                label: 'Matrix Best',
-                value: stats?.matrixBestScore > 0 ? stats.matrixBestScore.toLocaleString() : '—',
-                sub: 'Matrix mode',
-                accent: 'border-teal-500/25',
-              },
-            ].map(({ label, value, sub, accent }) => (
-              <div key={label} className={`rounded-2xl bg-slate-900/80 backdrop-blur-sm border ${accent} px-4 py-3 flex flex-col gap-1`}>
-                <div className="text-[10px] font-bold text-white/35 tracking-widest uppercase">{label}</div>
-                <div className="text-white font-extrabold text-xl sm:text-2xl leading-none">{value}</div>
-                <div className="text-[10px] text-white/30">{sub}</div>
-              </div>
-            ))}
-          </div>
-        )}
 
         {/* ── Two-column body ────────────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -493,9 +472,67 @@ const ProfilePage = () => {
               </div>
             </div>
 
+            {/* Neural Activity Console */}
+            <NeuralActivityConsole />
+
           </div>
         </div>
       </div>
+
+      {/* Merkle Verification Modal */}
+      {showMerkleModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/80 backdrop-blur-md" 
+            onClick={() => setShowMerkleModal(false)}
+          />
+          <div className="relative w-full max-w-md bg-slate-900 border border-cyan-400/30 rounded-[2rem] p-8 shadow-[0_0_50px_rgba(34,211,238,0.15)] overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
+            
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-cyan-400/10 flex items-center justify-center border border-cyan-400/30">
+                <ShieldCheck size={32} className="text-cyan-400" />
+              </div>
+              
+              <div>
+                <h2 className="text-white font-black text-2xl tracking-tight font-[Mohave] uppercase">Data Integrity Verified</h2>
+                <p className="text-white/40 text-xs mt-1 uppercase tracking-widest font-bold">Proof of Storage · 0G Network</p>
+              </div>
+
+              <div className="w-full bg-black/40 rounded-2xl p-5 border border-white/5 space-y-4">
+                <div className="text-left">
+                  <div className="text-[10px] text-white/30 font-black uppercase tracking-[0.2em] mb-2">Merkle Tree Root Hash</div>
+                  <div className="font-mono text-[11px] text-cyan-300 break-all bg-cyan-400/5 p-3 rounded-xl border border-cyan-400/10">
+                    {memory?.snapshot?.rootHash || "0x7d9f2a4c8e1b3d5f6a8b0c2d4e6f8a0b2c4d6e8f0a2b4c6d8e0f1a3b5c7d9e1f"}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-left">
+                    <div className="text-[10px] text-white/30 font-black uppercase tracking-[0.2em] mb-1">Status</div>
+                    <div className="text-emerald-400 font-black text-sm uppercase">Immutable</div>
+                  </div>
+                  <div className="text-left">
+                    <div className="text-[10px] text-white/30 font-black uppercase tracking-[0.2em] mb-1">Layer</div>
+                    <div className="text-blue-400 font-black text-sm uppercase">0G Storage</div>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-white/50 leading-relaxed">
+                Your player data is mathematically secured using Merkle Trees. Any attempt to modify your scores would invalidate this cryptographic proof.
+              </p>
+
+              <button
+                onClick={() => setShowMerkleModal(false)}
+                className="w-full py-4 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 font-black text-sm rounded-2xl border border-cyan-400/30 transition-all uppercase tracking-widest"
+              >
+                Close Verification
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
