@@ -88,7 +88,6 @@ const ProfilePage = () => {
       getWalletAddress() || '',
     [user, wallets],
   )
-  const short = useMemo(() => (address ? `${address.slice(0, 6)}…${address.slice(-4)}` : ''), [address])
 
   useEffect(() => {
     if (!isAuthenticated || !getToken()) return
