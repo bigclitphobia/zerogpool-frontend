@@ -99,24 +99,10 @@ function HeaderLogos({
   )
 }
 
-function TitleCard() {
-  return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-cyan-400/10 to-transparent pt-8 pb-5 text-center mb-3">
-      <div className="pointer-events-none absolute -inset-20 bg-[radial-gradient(900px_220px_at_50%_-20%,rgba(34,193,241,0.25),transparent)]" />
-      <div className="relative z-10">
-        <h2 className="text-3xl md:text-4xl font-extrabold tracking-wider bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 bg-clip-text text-transparent drop-shadow-[0_2px_16px_rgba(0,160,255,0.35)]">
-          WELCOME
-        </h2>
-        <div className="mx-auto mt-2 h-1 w-24 rounded-full bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-      </div>
-    </div>
-  )
-}
-
 function ErrorBanner({ error }: { error?: string }) {
   if (!error) return null
   return (
-    <div className="my-2 rounded-lg bg-[#2a0e0e] px-3 py-2 text-sm text-[#ffd8d8]">
+    <div className="my-2 rounded-xl border border-red-400/30 bg-red-950/40 px-3 py-2 text-sm text-red-100">
       {error}
     </div>
   )
@@ -125,7 +111,7 @@ function ErrorBanner({ error }: { error?: string }) {
 function EmbeddedWalletBadge({ address }: { address?: string }) {
   if (!address) return null
   return (
-    <div className="mb-3 rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-xs text-white/80 break-all">
+    <div className="mb-3 rounded-xl border border-[oklch(0.85_0.18_210/0.2)] bg-[oklch(0.12_0.08_270/0.65)] px-3 py-2 text-xs text-white/80 break-all">
       Wallet: <span className="font-mono text-[11px] text-white/95">{address}</span>
     </div>
   )
@@ -133,10 +119,10 @@ function EmbeddedWalletBadge({ address }: { address?: string }) {
 
 function DividerOr() {
   return (
-    <div className="my-1 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-[#9CB9D0]">
-      <span className="h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
-      <span className="text-xs">or</span>
-      <span className="h-px bg-gradient-to-r from-transparent via-white/25 to-transparent" />
+    <div className="my-1 grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-[oklch(0.85_0.18_210)]">
+      <span className="h-px bg-gradient-to-r from-transparent via-[oklch(0.85_0.18_210/0.45)] to-transparent" />
+      <span className="font-display text-[10px] uppercase tracking-[0.3em]">or</span>
+      <span className="h-px bg-gradient-to-r from-transparent via-[oklch(0.7_0.28_340/0.45)] to-transparent" />
     </div>
   )
 }
@@ -159,21 +145,21 @@ function EmailForm({
   return (
     <form className="grid gap-3" onSubmit={onEmailSubmit}>
       <label className="grid gap-2">
-        <span className="text-sm text-white/70">Email address</span>
+        <span className="font-display text-xs uppercase tracking-[0.22em] text-white/70">Email address</span>
         <input
           type="email"
           required
           placeholder="you@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-base text-white/95 placeholder-white/40 outline-none focus:ring-2 focus:ring-cyan-400/40 focus:border-white/30 transition"
+          className="rounded-2xl border border-[oklch(0.85_0.18_210/0.24)] bg-[oklch(0.1_0.08_270/0.72)] px-4 py-4 text-base font-semibold text-white/95 placeholder-white/35 outline-none shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition focus:border-[oklch(0.85_0.18_210/0.75)] focus:ring-2 focus:ring-[oklch(0.85_0.18_210/0.28)]"
           disabled={disabled}
         />
       </label>
       <div className="mt-1">
         <button
           type="submit"
-          className="inline-flex w-full items-center justify-center rounded-2xl border border-fuchsia-400/50 bg-gradient-to-tr from-fuchsia-500 to-violet-500 px-5 py-3 font-bold text-white shadow-[0_10px_28px_rgba(217,70,239,0.35)] hover:shadow-[0_14px_34px_rgba(217,70,239,0.45)] active:scale-[.98] disabled:opacity-60"
+          className="relative inline-flex w-full items-center justify-center overflow-hidden rounded-2xl border border-[oklch(0.7_0.28_340/0.65)] bg-gradient-to-r from-[oklch(0.7_0.28_340)] via-[oklch(0.55_0.25_265)] to-[oklch(0.85_0.18_210)] px-5 py-4 font-display text-sm font-bold uppercase tracking-[0.16em] text-white shadow-[0_0_28px_oklch(0.7_0.28_340/0.38)] transition hover:-translate-y-0.5 hover:shadow-[0_0_38px_oklch(0.85_0.18_210/0.45)] active:scale-[.98] disabled:opacity-60"
           disabled={
             disabled ||
             emailState.status === 'sending-code' ||
@@ -204,7 +190,7 @@ function CodeForm({
   return (
     <form className="grid gap-3" onSubmit={onCodeSubmit}>
       <label className="grid gap-2">
-        <span className="text-sm text-[#9CB9D0]">Enter 6-digit code</span>
+        <span className="font-display text-xs uppercase tracking-[0.22em] text-white/70">Enter 6-digit code</span>
         <input
           type="text"
           pattern="[0-9]{6}"
@@ -212,20 +198,20 @@ function CodeForm({
           placeholder="123456"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          className="rounded-xl border border-white/20 bg-white/5 px-4 py-3 text-base text-[#EAF6FF] outline-none focus:ring-2 focus:ring-cyan-400/50"
+          className="rounded-2xl border border-[oklch(0.85_0.18_210/0.24)] bg-[oklch(0.1_0.08_270/0.72)] px-4 py-4 text-base font-semibold text-white/95 placeholder-white/35 outline-none transition focus:border-[oklch(0.85_0.18_210/0.75)] focus:ring-2 focus:ring-[oklch(0.85_0.18_210/0.28)]"
         />
       </label>
       <div className="mt-1 flex justify-between gap-2">
         <button
           type="button"
           onClick={onBack}
-          className="rounded-xl border border-transparent px-3 py-2.5 text-[#9CB9D0] hover:text-white"
+          className="rounded-xl border border-transparent px-3 py-2.5 text-[oklch(0.85_0.18_210)] hover:text-white"
         >
           Edit email
         </button>
         <button
           type="submit"
-          className="inline-flex items-center justify-center rounded-2xl border border-fuchsia-400/50 bg-gradient-to-tr from-fuchsia-500 to-violet-500 px-5 py-3 font-bold text-white shadow-[0_10px_28px_rgba(217,70,239,0.35)] hover:shadow-[0_14px_34px_rgba(217,70,239,0.45)] active:scale-[.98] disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-2xl border border-[oklch(0.7_0.28_340/0.65)] bg-gradient-to-r from-[oklch(0.7_0.28_340)] via-[oklch(0.55_0.25_265)] to-[oklch(0.85_0.18_210)] px-5 py-3 font-display text-xs font-bold uppercase tracking-[0.16em] text-white shadow-[0_0_28px_oklch(0.7_0.28_340/0.38)] active:scale-[.98] disabled:opacity-60"
           disabled={emailState.status === 'submitting-code' || emailState.status === 'sending-code'}
         >
           {emailState.status === 'submitting-code' ? 'Verifying…' : 'Verify & continue'}
@@ -271,10 +257,10 @@ function WalletRow({
     <button
       type="button"
       onClick={onClick}
-      className="w-full inline-flex items-center justify-between rounded-2xl border border-white/15 bg-gradient-to-r from-[#0b122a] via-[#111a39] to-[#0b122a] px-4 py-3 text-white/95 hover:bg-white/10"
+      className="w-full inline-flex items-center justify-between rounded-2xl border border-[oklch(0.85_0.18_210/0.22)] bg-gradient-to-r from-[oklch(0.1_0.08_270/0.92)] via-[oklch(0.16_0.1_270/0.9)] to-[oklch(0.1_0.08_270/0.92)] px-4 py-3 text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition hover:-translate-y-0.5 hover:border-[oklch(0.85_0.18_210/0.65)] hover:shadow-[0_0_22px_oklch(0.85_0.18_210/0.22)]"
     >
       <span className="inline-flex items-center gap-2">
-        <span className="inline-flex size-6 items-center justify-center rounded-full bg-white/10">
+        <span className="inline-flex size-7 items-center justify-center rounded-full border border-[oklch(0.85_0.18_210/0.35)] bg-[oklch(0.85_0.18_210/0.12)] text-[oklch(0.85_0.18_210)]">
           <WalletIcon />
         </span>
         {label}
@@ -294,7 +280,7 @@ function WalletPickerScrollable({
 }) {
   return (
     <div className="grid gap-2">
-      <div className="rounded-xl border border-white/15 bg-white/5 p-3 text-sm text-white/80">
+      <div className="rounded-xl border border-[oklch(0.85_0.18_210/0.22)] bg-[oklch(0.12_0.08_270/0.65)] p-3 text-sm text-white/80">
         Choose a wallet to continue
       </div>
 
@@ -320,7 +306,7 @@ function WalletPickerScrollable({
       <button
         type="button"
         onClick={onBack}
-        className="mt-1 text-sm text-white/80 hover:text-white underline underline-offset-4"
+        className="mt-1 text-sm text-[oklch(0.85_0.18_210)] hover:text-white underline underline-offset-4"
       >
         Back
       </button>
@@ -337,7 +323,7 @@ function GoogleButton({
 }) {
   return (
     <button
-      className="flex w-full items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-4 py-3 font-semibold text-white/95 hover:bg-white/10 disabled:opacity-50"
+      className="flex w-full items-center justify-center rounded-2xl border border-white/15 bg-[oklch(0.1_0.08_270/0.72)] px-4 py-4 font-display text-sm font-semibold tracking-[0.08em] text-white/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition hover:-translate-y-0.5 hover:border-[oklch(0.85_0.18_210/0.45)] hover:bg-[oklch(0.16_0.1_270/0.75)] disabled:opacity-50"
       disabled={disabled}
       onClick={onClick}
       aria-label="Continue with Google"
@@ -360,20 +346,20 @@ function CreateWalletPanel({
   const copy = variant === 'email' ? 'Continue with your email session.' : 'Continue with your Google session.'
   const color =
     variant === 'email'
-      ? 'border-fuchsia-400/50 bg-gradient-to-tr from-fuchsia-500 to-violet-500'
-      : 'border-emerald-400/50 bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-500'
+      ? 'border-[oklch(0.7_0.28_340/0.65)] bg-gradient-to-r from-[oklch(0.7_0.28_340)] via-[oklch(0.55_0.25_265)] to-[oklch(0.85_0.18_210)]'
+      : 'border-[oklch(0.85_0.18_210/0.65)] bg-gradient-to-r from-[oklch(0.55_0.25_265)] via-[oklch(0.85_0.18_210)] to-[oklch(0.7_0.28_340)]'
 
   return (
     <div className="grid gap-4">
-      <div className="rounded-xl bg-amber-500/10 border border-amber-400/30 px-4 py-3 text-sm text-amber-50/90">
+      <div className="rounded-xl border border-[oklch(0.85_0.18_210/0.28)] bg-[oklch(0.85_0.18_210/0.08)] px-4 py-3 text-sm text-white/85">
         You don’t have a wallet address yet. We’ll create one now to continue.
       </div>
-      <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+      <div className="rounded-xl border border-[oklch(0.7_0.28_340/0.22)] bg-[oklch(0.12_0.08_270/0.65)] p-4">
         <div className="text-sm text-white/80 mb-3">{copy}</div>
         <button
           onClick={onCreate}
           disabled={creating}
-          className={`inline-flex w-full items-center justify-center rounded-2xl ${color} px-5 py-3 font-bold text-white shadow-[0_10px_28px_rgba(16,185,129,0.25)] active:scale-[.98] disabled:opacity-60`}
+          className={`inline-flex w-full items-center justify-center rounded-2xl ${color} px-5 py-4 font-display text-sm font-bold uppercase tracking-[0.16em] text-white shadow-[0_0_30px_oklch(0.85_0.18_210/0.28)] active:scale-[.98] disabled:opacity-60`}
         >
           {creating ? 'Creating wallet…' : 'Create wallet'}
         </button>
@@ -571,18 +557,22 @@ export default function LoginModal({
     <dialog
       ref={dialogRef}
       onCancel={requestClose}
-      className="fixed inset-0 z-50 m-0 flex items-center justify-center bg-black/40 p-4 sm:p-6 w-full h-full"
+      className="fixed inset-0 z-50 m-0 flex h-full w-full items-center justify-center overflow-hidden bg-[oklch(0.04_0.04_270/0.82)] p-4 backdrop-blur-md sm:p-6"
     >
+      <div className="bg-grid pointer-events-none absolute inset-0 opacity-20" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,oklch(0.55_0.25_265/0.24),transparent_42%),radial-gradient(circle_at_15%_80%,oklch(0.7_0.28_340/0.18),transparent_34%),radial-gradient(circle_at_85%_75%,oklch(0.85_0.18_210/0.16),transparent_32%)]" />
       <HeaderLogos leftLogoSrc={leftLogoSrc} rightLogoSrc={rightLogoSrc} />
 
-      <div className="relative w-full max-w-[500px] max-h-[92dvh] overflow-visible rounded-2xl border border-amber-400/60 bg-[rgba(24,16,8,0.94)] shadow-[0_30px_80px_rgba(0,0,0,0.70)]">
-        <div className="relative p-6 pt-10 md:pt-10 text-[#FFF7ED] bg-gradient-to-b from-[rgba(245,158,11,0.12)] via-[rgba(127,29,29,0.92)] to-[rgba(24,16,8,0.96)]">
+      <div className="relative w-full max-w-[500px] max-h-[92dvh] overflow-visible rounded-3xl border border-[oklch(0.85_0.18_210/0.35)] bg-[oklch(0.08_0.06_270/0.9)] shadow-[0_0_55px_oklch(0.55_0.25_265/0.28),0_30px_90px_rgba(0,0,0,0.72)] backdrop-blur-xl">
+        <div className="pointer-events-none absolute -inset-px rounded-3xl bg-gradient-to-br from-[oklch(0.85_0.18_210/0.55)] via-transparent to-[oklch(0.7_0.28_340/0.5)] opacity-70" />
+        <div className="relative overflow-hidden rounded-3xl p-6 pt-28 text-white md:pt-32">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[oklch(0.18_0.11_270/0.88)] via-[oklch(0.1_0.08_270/0.94)] to-[oklch(0.06_0.05_270/0.98)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,oklch(0.85_0.18_210/0.18),transparent_35%),radial-gradient(circle_at_100%_100%,oklch(0.7_0.28_340/0.16),transparent_42%)]" />
           {(centerLogoSrc ?? logoSrc) && (
             <img
               src={centerLogoSrc ?? logoSrc}
               alt="Center logo"
-              style={{ height: '120px' }}
-              className="absolute left-1/2 -top-8 md:-top-10 -translate-x-1/2 z-20 w-26 md:w-34 rounded-xl object-contain"
+              className="absolute left-1/2 top-3 z-20 h-24 w-auto -translate-x-1/2 rounded-xl object-contain drop-shadow-[0_0_22px_oklch(0.85_0.18_210/0.55)] md:h-28"
             />
           )}
 
@@ -590,90 +580,91 @@ export default function LoginModal({
             type="button"
             onClick={requestClose}
             aria-label="Close"
-            className="absolute right-3 top-2 text-2xl leading-none text-slate-300 hover:text-white bg-transparent p-0"
+            className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-3xl leading-none text-white/70 transition hover:border-[oklch(0.85_0.18_210/0.45)] hover:bg-white/10 hover:text-white"
           >
             ×
           </button>
 
-          <TitleCard />
-          <ErrorBanner error={error} />
-          <EmbeddedWalletBadge address={authenticated ? existingAddress : undefined} />
+          <div className="relative z-10">
+            <ErrorBanner error={error} />
+            <EmbeddedWalletBadge address={authenticated ? existingAddress : undefined} />
 
-          {showCustomCreateUI ? (
-            <CreateWalletPanel
-              variant={loginMethod === 'oauth' ? 'oauth' : 'email'}
-              creating={creating}
-              onCreate={handleCreateEmbeddedWallet}
-            />
-          ) : (
-            <div className="grid gap-4">
-              {!authenticated && (
-                <>
-                  {!walletMode ? (
-                    <>
-                      {emailStep === 'enter-email' ? (
-                        <EmailForm
-                          email={email}
-                          setEmail={setEmail}
-                          emailState={emailState}
-                          onEmailSubmit={onEmailSubmit}
-                          setLoginMethod={setLoginMethod}
-                          disabled={false}
-                        />
-                      ) : (
-                        <CodeForm
-                          code={code}
-                          setCode={setCode}
-                          onBack={() => {
+            {showCustomCreateUI ? (
+              <CreateWalletPanel
+                variant={loginMethod === 'oauth' ? 'oauth' : 'email'}
+                creating={creating}
+                onCreate={handleCreateEmbeddedWallet}
+              />
+            ) : (
+              <div className="grid gap-4">
+                {!authenticated && (
+                  <>
+                    {!walletMode ? (
+                      <>
+                        {emailStep === 'enter-email' ? (
+                          <EmailForm
+                            email={email}
+                            setEmail={setEmail}
+                            emailState={emailState}
+                            onEmailSubmit={onEmailSubmit}
+                            setLoginMethod={setLoginMethod}
+                            disabled={false}
+                          />
+                        ) : (
+                          <CodeForm
+                            code={code}
+                            setCode={setCode}
+                            onBack={() => {
+                              setError('')
+                              setCode('')
+                              setEmail('')
+                              setLoginMethod(null)
+                              setEmailStep('enter-email')
+                            }}
+                            onCodeSubmit={onCodeSubmit}
+                            emailState={emailState}
+                          />
+                        )}
+
+                        <DividerOr />
+
+                        {/* CONNECT WALLET triggers Privy wallet login to create an authenticated session */}
+                        <button
+                          className="relative inline-flex w-full items-center justify-center overflow-hidden rounded-2xl border border-[oklch(0.85_0.18_210/0.65)] bg-gradient-to-r from-[oklch(0.55_0.25_265)] via-[oklch(0.85_0.18_210)] to-[oklch(0.7_0.28_340)] px-4 py-4 font-display text-sm font-bold uppercase tracking-[0.16em] text-white shadow-[0_0_30px_oklch(0.85_0.18_210/0.35)] transition hover:-translate-y-0.5 hover:shadow-[0_0_40px_oklch(0.7_0.28_340/0.42)] active:scale-[.99] disabled:opacity-60"
+                          onClick={() => {
+                            if (emailStep === 'enter-code') return
                             setError('')
-                            setCode('')
-                            setEmail('')
-                            setLoginMethod(null)
-                            setEmailStep('enter-email')
+                            try { if (dialogRef.current?.open) dialogRef.current.close() } catch {}
+                            login({ loginMethods: ['wallet'] })
                           }}
-                          onCodeSubmit={onCodeSubmit}
-                          emailState={emailState}
+                          disabled={emailStep === 'enter-code'}
+                        >
+                          <span className="mr-2 inline-flex items-center">
+                            <WalletIcon />
+                          </span>
+                          <span>Connect Wallet</span>
+                        </button>
+
+                        <GoogleButton
+                          disabled={oauthLoading || emailStep === 'enter-code'}
+                          onClick={() => {
+                            if (emailStep === 'enter-code') return
+                            setLoginMethod('oauth')
+                            initOAuth({ provider: 'google' })
+                          }}
                         />
-                      )}
-
-                      <DividerOr />
-
-                      {/* CONNECT WALLET triggers Privy wallet login to create an authenticated session */}
-                      <button
-                        className="w-full inline-flex items-center justify-center rounded-2xl border border-emerald-400/50 bg-gradient-to-tr from-emerald-400 via-teal-400 to-cyan-500 px-4 py-3 text-lg font-bold text-white shadow-[0_10px_28px_rgba(16,185,129,0.35)] hover:shadow-[0_14px_34px_rgba(16,185,129,0.45)] active:scale-[.99] transition disabled:opacity-60"
-                        onClick={() => {
-                          if (emailStep === 'enter-code') return
-                          setError('')
-                          try { if (dialogRef.current?.open) dialogRef.current.close() } catch {}
-                          login({ loginMethods: ['wallet'] })
-                        }}
-                        disabled={emailStep === 'enter-code'}
-                      >
-                        <span className="mr-2 inline-flex items-center">
-                          <WalletIcon />
-                        </span>
-                        <span>Connect Wallet</span>
-                      </button>
-
-                      <GoogleButton
-                        disabled={oauthLoading || emailStep === 'enter-code'}
-                        onClick={() => {
-                          if (emailStep === 'enter-code') return
-                          setLoginMethod('oauth')
-                          initOAuth({ provider: 'google' })
-                        }}
+                      </>
+                    ) : (
+                      <WalletPickerScrollable
+                        connectWith={(w) => { connectWith(w) }}
+                        onBack={() => setWalletMode(false)}
                       />
-                    </>
-                  ) : (
-                    <WalletPickerScrollable
-                      connectWith={(w) => { connectWith(w) }}
-                      onBack={() => setWalletMode(false)}
-                    />
-                  )}
-                </>
-              )}
-            </div>
-          )}
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </dialog>
